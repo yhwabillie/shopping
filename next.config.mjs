@@ -9,6 +9,12 @@ const nextConfig = {
         port: '',
         pathname: '/storage/v1/object/public/**', // 모든 public 경로의 이미지에 적용됩니다.
       },
+      {
+        protocol: 'https',
+        hostname: 'hhgfywdzkbdfwrhfqlbn.supabase.co',
+        port: '',
+        pathname: '/storage/v1/object/public/**',
+      },
     ],
     formats: ['image/avif', 'image/webp'], // 웹 최적화 이미지 포맷 지정
   },
