@@ -38,13 +38,18 @@ export async function POST(request: NextRequest) {
     console.log('기본 프로필 사용 ========>', profile_img_result)
   } else if (profileImageEntry) {
     // 별도 프로필 이미지 사용하는 경우, supabase publicUrl 생성
-    const fileName = `${uuidv4()}-${inputData.id}`
+    const profileFile = profileImageEntry as File
+    const extension = profileFile.name.split('.').pop()?.toLowerCase()
+    const fileName = extension ? `${uuidv4()}-${inputData.id}.${extension}` : `${uuidv4()}-${inputData.id}`
     const { data, error } = await supabase.storage.from(process.env.NEXT_PUBLIC_PROJECT_DIR!).upload(fileName, profileImageEntry, {
       cacheControl: '3600',
       upsert: false,
     })
 
-    if (error) throw Error('Supabase Storage 업로드 에러입니다.')
+    if (error) {
+      console.error('Supabase upload error:', error)
+      throw Error('Supabase Storage 업로드 에러입니다.')
+    }
 
     const filePath = data.path
     console.log('========>', filePath)
