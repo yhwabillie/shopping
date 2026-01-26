@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     type: 'website',
     images: [
       {
-        url: 'https://fluplmlpoyjvgxkldyfh.supabase.co/storage/v1/object/public/next-auth-test/images/open_graph.png',
+        url: 'https://hhgfywdzkbdfwrhfqlbn.supabase.co/storage/v1/object/public/images/open_graph.png',
         width: 1200,
         height: 630,
         alt: '다양한 상품을 경쟁력 있는 가격에 제공하는 온라인 쇼핑몰, Shopping에서 특별한 쇼핑을 경험하세요',
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
     description: '다양한 상품을 경쟁력 있는 가격에 제공하는 온라인 쇼핑몰, Shopping에서 특별한 쇼핑을 경험하세요.',
     images: [
       {
-        url: 'https://fluplmlpoyjvgxkldyfh.supabase.co/storage/v1/object/public/next-auth-test/images/open_graph.png',
+        url: 'https://hhgfywdzkbdfwrhfqlbn.supabase.co/storage/v1/object/public/images/open_graph.png',
         alt: 'Shopping OG Image',
       },
     ],
