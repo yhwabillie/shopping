@@ -4,7 +4,6 @@ import { Header } from '@/lib/components/common/layout/Header'
 import { Toaster } from 'sonner'
 import { FramerMotionProvider } from '@/lib/components/common/FramerMotionProvider'
 import { ModalProvider } from '@/lib/components/common/provider/ModalProvider'
-import { PreloadResources } from './preload-resources'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -78,16 +77,13 @@ interface RootLayoutType {
 
 export default async function RootLayout({ children }: Readonly<RootLayoutType>) {
   return (
-    <>
-      <PreloadResources />
-      <html lang="ko">
-        <AuthProvider>
-          <Toaster position="top-center" theme="light" richColors closeButton />
-          <Header />
-          <FramerMotionProvider>{children}</FramerMotionProvider>
-          <ModalProvider />
-        </AuthProvider>
-      </html>
-    </>
+    <html lang="ko">
+      <AuthProvider>
+        <Toaster position="top-center" theme="light" richColors closeButton />
+        <Header />
+        <FramerMotionProvider>{children}</FramerMotionProvider>
+        <ModalProvider />
+      </AuthProvider>
+    </html>
   )
 }

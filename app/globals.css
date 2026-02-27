@@ -1,17 +1,23 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-@import url(https://fluplmlpoyjvgxkldyfh.supabase.co/storage/v1/object/public/next-auth-test/fonts/SpoqaHanSansNeo-Regular.woff2);
+@font-face {
+  font-family: "Spoqa Han Sans Neo";
+  src: url("https://hhgfywdzkbdfwrhfqlbn.supabase.co/storage/v1/object/public/fonts/SpoqaHanSansNeo-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@theme {
+  --font-sans: "Spoqa Han Sans Neo", sans-serif;
+} 
 
 html,
 body {
-  font-family: 'Spoqa Han Sans Neo', 'sans-serif';
+  font-family: var(--font-sans);
 }
 
 input[type='checkbox'] {
-  -webkit-appearance: none;
-  -moz-appearance: none;
   appearance: none;
 }
 
@@ -25,15 +31,11 @@ input[type='file'] {
 }
 
 select {
-  -webkit-appearance: none;
-  -moz-appearance: none;
   appearance: none;
 }
 
 /* 기본 브라우저 스타일 초기화 */
 input[type='search'] {
-  -webkit-appearance: none;
-  -moz-appearance: none;
   appearance: none;
   border: none;
   outline: none;
