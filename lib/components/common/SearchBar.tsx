@@ -106,9 +106,8 @@ export const SearchBar = ({ isScrolled }: SearchBarProps) => {
     <fieldset ref={searchBarRef} className="relative z-20">
       <div
         className={clsx(
-          'relative mx-auto flex h-[40px] items-center justify-between rounded-[20px] border-[1px] border-primary bg-primary py-3 pl-6 pr-3 shadow-md',
+          'rounded-max border-1 relative mx-auto flex h-10 items-center justify-between border-primary bg-primary py-3 pl-6 pr-3 shadow-md',
           {
-            '!border-white': isFocus,
             'bg-white': isScrolled,
           },
         )}
@@ -183,7 +182,7 @@ export const SearchBar = ({ isScrolled }: SearchBarProps) => {
               )}
 
               {autoCompleteSuggestions.length === 0 && !loading && (
-                <p className="md:text-md mx-2 mb-5 text-center text-[14px] text-xs text-[#9da5b6]">제품 이름 혹은 카테고리를 검색하세요</p>
+                <p className="p-2 text-center text-sm text-[#9da5b6]">제품 이름 혹은 카테고리를 검색하세요</p>
               )}
             </div>
           </div>

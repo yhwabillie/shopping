@@ -9,6 +9,20 @@ import { BsShop } from 'react-icons/bs'
 import { useEffect, useState } from 'react'
 import { HamburgerMenu } from '../HambergerMenu'
 import clsx from 'clsx'
+import { cva } from 'class-variance-authority'
+import { twMerge } from 'tailwind-merge'
+
+const headerVariants = cva('h-15 sticky left-0 top-0 z-40 flex w-full justify-center backdrop-blur-md transition-colors duration-300', {
+  variants: {
+    isScrolled: {
+      true: 'bg-primary/80 shadow-inner',
+      false: 'bg-transparent',
+    },
+  },
+  defaultVariants: {
+    isScrolled: false,
+  },
+})
 
 export enum TooltipTypes {
   NONE = 'NONE',
@@ -43,11 +57,7 @@ export const Header = () => {
   }, [])
 
   return (
-    <header
-      className={clsx('sticky left-0 top-0 z-40 flex h-[60px] w-full justify-center backdrop-blur-md transition-colors duration-300', {
-        'bg-primary/80 shadow-inner': isScrolled,
-      })}
-    >
+    <header className={twMerge(headerVariants({ isScrolled: isScrolled }))}>
       <div className="flex h-full w-[calc(100%-40px)] items-center justify-between gap-[20px]">
         <ul className="flex flex-row gap-3">
           <li>
