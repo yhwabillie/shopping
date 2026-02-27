@@ -14,7 +14,10 @@
   --color-primary: #b04a4a;
   --color-secondary: #660000;
   --color-accent: #333333;
+  --color-scroll-thumb: #9ca3af;
+  --color-scroll-track: transparent;
   --animate-marquee: marquee 10s linear infinite;
+  --radius-max: 1000px;
 
   @keyframes marquee {
     from {
@@ -26,67 +29,45 @@
   }
 }
 
-html,
-body {
-  font-family: var(--font-sans);
-}
+@layer base {
+  html,
+  body {
+    font-family: var(--font-sans);
+  }
 
-input[type='checkbox'] {
-  appearance: none;
-}
+  input[type='checkbox'] {
+    appearance: none;
+  }
+  input[type='file'] {
+    position: absolute;
+    width: 0;
+    height: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+  }
+  input[type='search'] {
+    appearance: none;
+    border: none;
+    outline: none;
+    background: none;
+    padding: 0;
+    margin: 0;
+  }
+  input[type='search']::-webkit-search-cancel-button {
+    display: none;
+  }
+  input[type='number']::-webkit-outer-spin-button,
+  input[type='number']::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+  }
 
-input[type='file'] {
-  position: absolute;
-  width: 0;
-  height: 0;
-  padding: 0;
-  overflow: hidden;
-  border: 0;
-}
+  select {
+    appearance: none;
+  }
 
-select {
-  appearance: none;
-}
-
-/* 기본 브라우저 스타일 초기화 */
-input[type='search'] {
-  appearance: none;
-  border: none;
-  outline: none;
-  background: none;
-  padding: 0;
-  margin: 0;
-}
-
-input[type='search']::-ms-clear,
-input[type='search']::-ms-reveal {
-  display: none;
-  width: 0;
-  height: 0;
-}
-input[type='search']::-webkit-search-decoration,
-input[type='search']::-webkit-search-cancel-button,
-input[type='search']::-webkit-search-results-button,
-input[type='search']::-webkit-search-results-decoration {
-  display: none;
-}
-
-input::-webkit-outer-spin-button,
-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-}
-
-.scroll-area::-webkit-scrollbar {
-  width: 15px;
-}
-
-.scroll-area::-webkit-scrollbar-thumb {
-  background: #9ca3af;
-  background-clip: padding-box;
-  border: 3px solid transparent;
-  border-radius: 8px;
-}
-
-.scroll-area::-webkit-scrollbar-track {
-  background: transparent;
+  .scroll-area {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-scroll-thumb) var(--color-scroll-track);
+  }
 }
