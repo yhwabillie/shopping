@@ -2,15 +2,29 @@
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { FaShoppingCart } from 'react-icons/fa'
-import { UserMenuDropdown } from '@/lib/components/common/modules/UserMenuDropdown'
-import { UserNavItem } from '../modules/UserNavItem'
-import { SearchBar } from '../SearchBar'
 import { BsShop } from 'react-icons/bs'
 import { useEffect, useState } from 'react'
-import { HamburgerMenu } from '../HambergerMenu'
 import clsx from 'clsx'
 import { cva } from 'class-variance-authority'
 import { twMerge } from 'tailwind-merge'
+import dynamic from 'next/dynamic'
+
+const SearchBar = dynamic(() => import('../SearchBar').then((m) => m.SearchBar), {
+  ssr: false,
+  loading: () => <div className="h-10 w-full max-w-md" aria-hidden />,
+})
+
+const HamburgerMenu = dynamic(() => import('../HambergerMenu').then((m) => m.HamburgerMenu), {
+  ssr: false,
+})
+
+const UserMenuDropdown = dynamic(() => import('@/lib/components/common/modules/UserMenuDropdown').then((m) => m.UserMenuDropdown), {
+  ssr: false,
+})
+
+const UserNavItem = dynamic(() => import('../modules/UserNavItem').then((m) => m.UserNavItem), {
+  ssr: false,
+})
 
 const headerVariants = cva('h-15 sticky left-0 top-0 z-40 flex w-full justify-center backdrop-blur-md transition-colors duration-300', {
   variants: {

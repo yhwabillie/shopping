@@ -9,7 +9,7 @@ export default async function Page() {
       </h2>
 
       <VisualBanner />
-      <ProductList />
+      {/* <ProductList /> */}
     </section>
   )
 }

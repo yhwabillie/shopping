@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import { Header } from '@/lib/components/common/layout/Header'
 import { Toaster } from 'sonner'
 import { FramerMotionProvider } from '@/lib/components/common/FramerMotionProvider'
-import { ModalProvider } from '@/lib/components/common/provider/ModalProvider'
+import { ModalProviderLazy } from '@/lib/components/common/provider/ModalProviderLazy'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -81,8 +81,8 @@ export default async function RootLayout({ children }: Readonly<RootLayoutType>)
       <AuthProvider>
         <Toaster position="top-center" theme="light" richColors closeButton />
         <Header />
-        <FramerMotionProvider>{children}</FramerMotionProvider>
-        <ModalProvider />
+        {children}
+        <ModalProviderLazy />
       </AuthProvider>
     </html>
   )

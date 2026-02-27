@@ -48,6 +48,7 @@
     "react-loading-skeleton": "^3.4.0",
     "sharp": "^0.33.5",
     "sonner": "^1.5.0",
+    "swiper": "^12.1.2",
     "tailwind-merge": "^3.5.0",
     "uuid": "^10.0.0",
     "xlsx": "^0.18.5",
@@ -55,8 +56,6 @@
     "zustand": "^4.5.4"
   },
   "devDependencies": {
-    "@egjs/flicking-plugins": "^4.7.1",
-    "@egjs/react-flicking": "^4.11.4",
     "@tailwindcss/postcss": "^4.2.1",
     "@types/bcryptjs": "^2",
     "@types/jsonwebtoken": "^9.0.6",
