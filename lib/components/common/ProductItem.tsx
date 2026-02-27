@@ -15,6 +15,8 @@ interface ProductItemProps {
 }
 
 export const ProductItem = React.memo(({ product, index, handleClickAddProduct, handleClickAddWish }: ProductItemProps) => {
+  const isPriorityImage = index < 4
+
   return (
     <li className="group relative box-border flex aspect-[2/3] flex-col justify-between overflow-hidden p-5">
       {/* 카테고리, 제목 */}
@@ -69,18 +71,17 @@ export const ProductItem = React.memo(({ product, index, handleClickAddProduct, 
           src={product.imageUrl}
           alt={product.name}
           className="h-full w-full object-cover transition-all duration-300 group-hover:scale-110"
-          priority={true}
-          loading={'eager'}
+          priority={isPriorityImage}
+          loading={isPriorityImage ? 'eager' : 'lazy'}
           quality={75}
-          fetchPriority="high"
+          fetchPriority={isPriorityImage ? 'high' : 'auto'}
           fill
           sizes="
-          (min-width: 360px) 156.5px,
-          (max-width: 639px) 296px,
-          (max-width: 767px) 202.67px,
-          (max-width: 1023px) 192px,
-          (max-width: 1535px) 256px,
-          307.2px
+          (max-width: 639px) calc((100vw - 2rem) / 2),
+          (max-width: 767px) calc((100vw - 2rem) / 3),
+          (max-width: 1279px) calc((100vw - 2rem) / 4),
+          (max-width: 1535px) calc((100vw - 2rem) / 5),
+          307px
           "
         />
       </picture>

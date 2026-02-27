@@ -1,9 +1,8 @@
 import { AuthProvider } from '@/lib/components/common/provider/AuthProvider'
 import type { Metadata } from 'next'
-import { Header } from '@/lib/components/common/layout/Header'
-import { Toaster } from 'sonner'
 import { FramerMotionProvider } from '@/lib/components/common/FramerMotionProvider'
 import { ModalProviderLazy } from '@/lib/components/common/provider/ModalProviderLazy'
+import { AppTopLazy } from '@/lib/components/common/layout/AppTopLazy'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -79,8 +78,7 @@ export default async function RootLayout({ children }: Readonly<RootLayoutType>)
   return (
     <html lang="ko">
       <AuthProvider>
-        <Toaster position="top-center" theme="light" richColors closeButton />
-        <Header />
+        <AppTopLazy />
         {children}
         <ModalProviderLazy />
       </AuthProvider>

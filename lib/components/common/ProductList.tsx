@@ -29,14 +29,18 @@ export const ProductList = () => {
   } = useProductsStore()
 
   const [page, setPage] = useState(1)
-  const pageSize = 10
+  const pageSize = 8
+  const skeletonCount = 3
+  const [hasInitialFetchCompleted, setHasInitialFetchCompleted] = useState(false)
+  const isInitialLoading = !hasInitialFetchCompleted || (loading && filteredData.length === 0)
 
   // 마지막 페이지 계산을 useMemo로 최적화
   const lastPage = useMemo(() => Math.ceil(totalProducts / pageSize), [totalProducts, pageSize])
   const hasMorePages = page <= lastPage
 
   const { ref: triggerRef, inView: triggerInVeiw } = useInView({
-    threshold: 0.1,
+    threshold: 0.35,
+    rootMargin: '0px 0px -120px 0px',
   })
 
   // 1. 세션 확인
@@ -53,6 +57,8 @@ export const ProductList = () => {
       await fetchData(1, pageSize)
     } catch (error) {
       toast.error('데이터를 가져오는 중 오류가 발생했습니다.')
+    } finally {
+      setHasInitialFetchCompleted(true)
     }
   }, [fetchData, setSearchQuery])
 
@@ -76,15 +82,15 @@ export const ProductList = () => {
           setLoadingMore(false)
         }
       }
-    }, 300),
+    }, 600),
     [loading, isEmpty, hasMorePages, loadingMore, loadMoreData, pageSize],
   )
 
   useEffect(() => {
-    if (triggerInVeiw) {
+    if (triggerInVeiw && page >= 1 && !loading) {
       handleLoadMore()
     }
-  }, [triggerInVeiw, handleLoadMore])
+  }, [triggerInVeiw, handleLoadMore, page, loading])
 
   // 위시 추가 & 제거 Toggle
   const handleClickAddWish = useCallback(
@@ -117,23 +123,31 @@ export const ProductList = () => {
 
       {/* 상품 리스트 */}
       <section className="container box-border w-full bg-white sm:mx-auto md:mt-4 md:bg-transparent">
-        <ul className="mx-4 my-4 box-border grid grid-cols-2 sm:grid-cols-3 md:m-0 md:grid-cols-4 xl:grid-cols-5">
-          {filteredData.map((product, index) => (
-            <ProductItem
-              key={product.idx}
-              product={product}
-              index={index}
-              handleClickAddProduct={handleClickAddProduct}
-              handleClickAddWish={handleClickAddWish}
-            />
-          ))}
+        {isInitialLoading ? (
+          <div className="flex h-48 w-full items-center justify-center">
+            <LoadingSpinner />
+          </div>
+        ) : (
+          <ul className="mx-4 my-4 box-border grid grid-cols-2 sm:grid-cols-3 md:m-0 md:grid-cols-4 xl:grid-cols-5">
+            {filteredData.map((product, index) => (
+              <ProductItem
+                key={product.idx}
+                product={product}
+                index={index}
+                handleClickAddProduct={handleClickAddProduct}
+                handleClickAddWish={handleClickAddWish}
+              />
+            ))}
 
-          {/* Skeleton Products (무한 스크롤 시 추가로 로드될 때 표시) */}
-          {hasMorePages &&
-            Array.from({ length: 5 }, (_, i) => <SkeletonProduct key={`skeleton-${i}`} triggerRef={i === 0 ? triggerRef : undefined} />)}
-        </ul>
+            {/* Skeleton Products (무한 스크롤 시 추가로 로드될 때 표시) */}
+            {hasMorePages &&
+              Array.from({ length: skeletonCount }, (_, i) => (
+                <SkeletonProduct key={`skeleton-${i}`} triggerRef={i === 0 ? triggerRef : undefined} />
+              ))}
+          </ul>
+        )}
 
-        {hasMorePages && (
+        {!isInitialLoading && hasMorePages && (
           <div className="flex h-48 w-full items-center justify-center">
             <LoadingSpinner />
           </div>

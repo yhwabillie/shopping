@@ -17,6 +17,9 @@ const nextConfig = {
       },
     ],
     formats: ['image/avif', 'image/webp'], // 웹 최적화 이미지 포맷 지정
+    minimumCacheTTL: 2678400, // Next 이미지 최적화 결과 캐시 TTL(31일)
+    deviceSizes: [360, 640, 768, 1024, 1280, 1536],
+    imageSizes: [156, 192, 202, 256, 307],
   },
   async headers() {
     return [
