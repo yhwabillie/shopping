@@ -23,7 +23,6 @@
     "@prisma/client": "^5.17.0",
     "@supabase/ssr": "^0.4.0",
     "@supabase/supabase-js": "^2.44.4",
-    "@tailwindcss/aspect-ratio": "^0.4.2",
     "autoprefixer": "^10.4.19",
     "axios": "^1.7.2",
     "bcryptjs": "^2.4.3",

@@ -8,8 +8,8 @@ export default async function Page() {
         상품 리스트 본문
       </h2>
 
-      {/* <VisualBanner />
-      <ProductList /> */}
+      <VisualBanner />
+      <ProductList />
     </section>
   )
 }

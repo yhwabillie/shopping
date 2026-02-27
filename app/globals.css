@@ -1,16 +1,30 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @font-face {
-  font-family: "Spoqa Han Sans Neo";
-  src: url("https://hhgfywdzkbdfwrhfqlbn.supabase.co/storage/v1/object/public/fonts/SpoqaHanSansNeo-Regular.woff2") format("woff2");
+  font-family: 'Spoqa Han Sans Neo';
+  src: url('https://hhgfywdzkbdfwrhfqlbn.supabase.co/storage/v1/object/public/fonts/SpoqaHanSansNeo-Regular.woff2') format('woff2');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 
 @theme {
-  --font-sans: "Spoqa Han Sans Neo", sans-serif;
-} 
+  --font-sans: 'Spoqa Han Sans Neo', sans-serif;
+  --font-matemasie: 'Matemasie', sans-serif;
+  --color-primary: #b04a4a;
+  --color-secondary: #660000;
+  --color-accent: #333333;
+  --animate-marquee: marquee 10s linear infinite;
+
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+}
 
 html,
 body {
