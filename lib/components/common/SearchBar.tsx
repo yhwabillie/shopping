@@ -58,7 +58,7 @@ export const SearchBar = ({ isScrolled }: SearchBarProps) => {
     const encodedQuery = encodeURIComponent(query)
     const isSameSearchPageQuery = pathname === '/search' && normalizedCurrentQuery.toLowerCase() === query.toLowerCase()
 
-    setInputValue(query)
+    setInputValue('')
     setSearchQuery(query)
     setAutoCompleteSuggestions([])
     setIsFocus(false)
@@ -148,7 +148,7 @@ export const SearchBar = ({ isScrolled }: SearchBarProps) => {
   }, [activeIndex, isFocus, visibleSuggestions.length])
 
   return (
-    <fieldset ref={searchBarRef} className="relative z-20">
+    <fieldset ref={searchBarRef} className="relative z-20 flex-[1_1_auto] sm:flex-none">
       <div
         className={clsx(
           'rounded-max border-1 relative mx-auto flex h-10 items-center justify-between border-primary bg-primary py-3 pl-6 pr-3 shadow-md',
@@ -171,7 +171,7 @@ export const SearchBar = ({ isScrolled }: SearchBarProps) => {
           aria-activedescendant={activeIndex >= 0 ? `suggestion-${visibleSuggestions[activeIndex]?.idx}` : undefined}
           aria-autocomplete="list"
           placeholder="제품 이름, 카테고리 검색"
-          className={clsx('sm:text-md w-[120px] bg-primary placeholder:text-[14px] focus:outline-0 sm:w-[300px]', {
+          className={clsx('sm:text-md w-[120px] flex-[1] bg-primary placeholder:text-[14px] focus:outline-0 sm:w-[300px]', {
             'bg-white text-primary placeholder:text-primary/50': isScrolled,
             'text-white placeholder:text-white': !isScrolled,
           })}

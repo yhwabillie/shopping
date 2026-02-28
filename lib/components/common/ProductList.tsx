@@ -153,7 +153,7 @@ export const ProductList = () => {
 
   // 3. 무한 스크롤 Trigger (중복 호출 방지 + store의 currentPage 기준)
   const handleLoadMore = useCallback(async () => {
-    if (isLoadingMoreRef.current || listLoading || isEmpty || !hasMorePages || isAllProductsLoaded) return
+    if (isLoadingMoreRef.current || !hasInitialFetchCompleted || listLoading || isEmpty || !hasMorePages || isAllProductsLoaded) return
 
     isLoadingMoreRef.current = true
     setIsLoadingMore(true)
@@ -165,7 +165,7 @@ export const ProductList = () => {
       setIsLoadingMore(false)
       isLoadingMoreRef.current = false
     }
-  }, [listLoading, isEmpty, hasMorePages, isAllProductsLoaded, loadMoreData, currentPage, pageSize])
+  }, [hasInitialFetchCompleted, listLoading, isEmpty, hasMorePages, isAllProductsLoaded, loadMoreData, currentPage, pageSize])
 
   useEffect(() => {
     if (triggerInView && hasMorePages && !isAllProductsLoaded) {
@@ -236,7 +236,7 @@ export const ProductList = () => {
 
         {!isInitialLoading && hasMorePages && !isAllProductsLoaded && <div ref={triggerRef} className="h-12 w-full" aria-hidden />}
 
-        {isLoadingMore && (
+        {!isInitialLoading && isLoadingMore && (
           <div className="flex h-48 w-full items-center justify-center">
             <LoadingSpinner />
           </div>

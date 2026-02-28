@@ -50,10 +50,6 @@ const ProductList = dynamic(() => import('@/lib/components/common/ProductList').
             </li>
           ))}
         </ul>
-
-        <div className="flex h-24 w-full items-center justify-center">
-          <div className="h-10 w-10 rounded-full border-4 border-slate-300 border-t-slate-400" />
-        </div>
       </section>
     </div>
   ),

@@ -144,17 +144,26 @@ export const SearchResult = () => {
                 <button
                   type="button"
                   onClick={() => handleClickAddWish(product)}
-                  className="mr-2 inline-block rounded-md bg-secondary p-2 text-sm text-white shadow-md transition-all duration-300"
+                  className={clsx(
+                    'mr-2 inline-block cursor-pointer rounded-md p-2 text-sm text-white shadow-md transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg',
+                    {
+                      'bg-secondary hover:bg-pink-500': !product.isInWish,
+                      'bg-gray-600 hover:bg-rose-700': product.isInWish,
+                    },
+                  )}
                 >
                   {product.isInWish ? <LuHeartOff className="text-2xl" /> : <FaHeartCirclePlus className="text-2xl drop-shadow-md" />}
                 </button>
                 <button
                   type="button"
                   onClick={() => handleClickAddProduct(product)}
-                  className={clsx('inline-block rounded-md p-2 text-sm text-white duration-300', {
-                    'hover:bg-primary-tonDown bg-primary': !product.isInCart,
-                    'bg-gray-600 hover:bg-gray-700': product.isInCart,
-                  })}
+                  className={clsx(
+                    'inline-block cursor-pointer rounded-md p-2 text-sm text-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg',
+                    {
+                      'bg-primary hover:bg-blue-700': !product.isInCart,
+                      'bg-gray-600 hover:bg-slate-700': product.isInCart,
+                    },
+                  )}
                 >
                   {product.isInCart ? <TbShoppingBagMinus className="text-2xl" /> : <TbShoppingBagPlus className="text-2xl drop-shadow-md" />}
                 </button>

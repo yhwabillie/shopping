@@ -24,6 +24,7 @@ interface HambergerMenuProps {
 export const HamburgerMenu = ({ sessionUser, isIndivisual, isAdmin, isAuth, isGuest, isScrolled }: HambergerMenuProps) => {
   const [isOpen, setIsOpen] = useState(false)
   const [isMenuMounted, setIsMenuMounted] = useState(false)
+  const triggerButtonRef = useRef<HTMLButtonElement | null>(null)
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { disableScroll, enableScroll } = useBodyScrollStore()
 
@@ -34,6 +35,7 @@ export const HamburgerMenu = ({ sessionUser, isIndivisual, isAdmin, isAuth, isGu
 
     setIsOpen(false)
     enableScroll()
+    triggerButtonRef.current?.focus()
 
     closeTimerRef.current = setTimeout(() => {
       setIsMenuMounted(false)
@@ -90,7 +92,12 @@ export const HamburgerMenu = ({ sessionUser, isIndivisual, isAdmin, isAuth, isGu
 
   return (
     <>
-      <button aria-label="sidemenu button" className="relative z-[100] flex h-8 w-8 cursor-pointer items-center justify-center" onClick={toggleMenu}>
+      <button
+        ref={triggerButtonRef}
+        aria-label="sidemenu button"
+        className="relative z-[100] flex h-8 w-8 cursor-pointer items-center justify-center"
+        onClick={toggleMenu}
+      >
         <div
           className={clsx('absolute h-[3px] w-6 rounded-md shadow-md transition-all duration-300 ease-in-out', {
             'translate-y-0 rotate-45': isOpen,
@@ -132,7 +139,6 @@ export const HamburgerMenu = ({ sessionUser, isIndivisual, isAdmin, isAuth, isGu
             style={{ height: '100vh' }}
           />
           <div
-            aria-hidden={!isOpen}
             className={clsx('fixed inset-y-0 right-0 z-[80] w-2/3 bg-gray-200 shadow-inner transition-transform duration-300 sm:w-[35%]', {
               'translate-x-0': isOpen,
               'translate-x-full': !isOpen,
