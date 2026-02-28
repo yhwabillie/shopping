@@ -26,7 +26,7 @@ const UserNavItem = dynamic(() => import('../modules/UserNavItem').then((m) => m
   ssr: false,
 })
 
-const headerVariants = cva('h-15 sticky left-0 top-0 z-40 flex w-full justify-center backdrop-blur-md transition-colors duration-300', {
+const headerVariants = cva('h-[72px] sticky left-0 top-0 z-40 flex w-full justify-center backdrop-blur-md transition-colors duration-300', {
   variants: {
     isScrolled: {
       true: 'bg-primary/80 shadow-inner',
@@ -77,7 +77,7 @@ export const Header = () => {
 
   return (
     <header className={twMerge(headerVariants({ isScrolled: isScrolled }))}>
-      <div className="flex h-full w-[calc(100%-40px)] items-center justify-between gap-[20px]">
+      <div className="flex h-full w-full items-center justify-between gap-[20px] px-10">
         <ul className="flex flex-row gap-3">
           <li>
             <h1>

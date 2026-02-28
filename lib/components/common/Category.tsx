@@ -44,23 +44,33 @@ const CategoryItem = React.memo(
     onClick: (name: string) => void
   }) => {
     return (
-      <li className="mx-auto w-fit">
-        <button onClick={() => onClick(name)}>
+      <li className="mx-auto w-fit px-0.5">
+        <button
+          type="button"
+          onClick={() => onClick(name)}
+          className="group min-w-[68px] cursor-pointer rounded-lg transition-transform duration-200 hover:-translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+        >
           <p
-            className={clsx('mx-auto mb-1 flex h-[42px] w-[42px] items-center justify-center rounded-lg border-transparent bg-gray-200/70', {
-              'bg-primary/15': isSelected,
-            })}
+            className={clsx(
+              'mx-auto mb-1 flex h-[42px] w-[42px] items-center justify-center rounded-lg border-transparent bg-gray-200/70 transition-all duration-200 group-hover:bg-primary/15 group-hover:shadow-[0_6px_14px_rgba(37,99,235,0.22)]',
+              {
+                'bg-primary/15': isSelected,
+              },
+            )}
           >
             <Icon
-              className={clsx(iconClassName, {
+              className={clsx(iconClassName, 'transition-colors duration-200 group-hover:text-primary', {
                 'text-primary': isSelected,
               })}
             />
           </p>
           <p
-            className={clsx('text-center text-xs tracking-tighter text-accent md:text-sm', {
-              'font-medium text-primary': isSelected,
-            })}
+            className={clsx(
+              'whitespace-nowrap text-center text-xs tracking-tighter text-accent transition-colors duration-200 group-hover:text-primary md:text-sm',
+              {
+                'font-medium text-primary': isSelected,
+              },
+            )}
           >
             {name}
           </p>
@@ -74,7 +84,7 @@ export const Category = React.memo(({ setCategoryFilter, selectedCategory }: Cat
   return (
     <>
       <h3 className="sr-only">상품 카테고리</h3>
-      <ul className="mx-auto box-border grid grid-cols-6 gap-3 px-8 pt-5 md:w-fit md:grid-cols-8 md:rounded-lg md:bg-white md:p-5 lg:grid-cols-10 xl:grid-cols-12">
+      <ul className="mx-auto box-border grid grid-cols-6 gap-x-4 gap-y-3 px-8 pt-5 md:w-fit md:grid-cols-8 md:rounded-lg md:bg-white md:p-5 lg:grid-cols-10 xl:grid-cols-12">
         {categories.map((category) => (
           <CategoryItem
             key={category.name}

@@ -35,7 +35,7 @@ export const UserNavItem = ({ sessionUser, children, label, path, type, isScroll
           }
         }}
         className={clsx(
-          'box-border flex h-[40px] w-[40px] items-center justify-center rounded-md bg-accent text-center text-sm text-white shadow-lg transition-colors duration-300',
+          'box-border flex h-[40px] w-[40px] cursor-pointer items-center justify-center rounded-md bg-accent text-center text-sm text-white shadow-lg transition-all duration-300 hover:-translate-y-0.5',
           {
             'bg-white !text-accent': isScrolled,
           },

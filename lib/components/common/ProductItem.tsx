@@ -52,7 +52,12 @@ export const ProductItem = React.memo(({ product, index, handleClickAddProduct, 
         </div>
         <ul className="relative z-[1] flex h-fit w-fit flex-col gap-3">
           <li className="flex items-center justify-center">
-            <button aria-label="shopping cart add remove toggle button" type="button" onClick={() => handleClickAddProduct(product)}>
+            <button
+              aria-label="shopping cart add remove toggle button"
+              type="button"
+              onClick={() => handleClickAddProduct(product)}
+              className="cursor-pointer transition-transform duration-200 hover:-translate-y-0.5"
+            >
               {product.isInCart ? (
                 <TbShoppingBagMinus className="text-4xl text-white drop-shadow-md transition-all hover:text-gray-300" />
               ) : (
@@ -61,7 +66,12 @@ export const ProductItem = React.memo(({ product, index, handleClickAddProduct, 
             </button>
           </li>
           <li className="flex items-center justify-center">
-            <button aria-label="wishlist cart add remove toggle button" type="button" onClick={() => handleClickAddWish(product)}>
+            <button
+              aria-label="wishlist cart add remove toggle button"
+              type="button"
+              onClick={() => handleClickAddWish(product)}
+              className="cursor-pointer transition-transform duration-200 hover:-translate-y-0.5"
+            >
               {product.isInWish ? (
                 <LuHeartOff className="text-3xl text-white drop-shadow-md transition-all hover:text-gray-300" />
               ) : (

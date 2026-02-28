@@ -2,11 +2,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import type { Swiper as SwiperType } from 'swiper'
-import { Autoplay, EffectFade } from 'swiper/modules'
+import { Autoplay } from 'swiper/modules'
 import 'swiper/css'
-import 'swiper/css/effect-fade'
 import Image from 'next/image'
-import { PagingBtn } from '@/lib/components/common/PagingBtn'
 import { BsPauseFill, BsPlayFill } from 'react-icons/bs'
 
 const bannerList = [
@@ -14,8 +12,8 @@ const bannerList = [
     id: 1,
     title: '요가 루틴 <br /> 밸런스 케어',
     description: '호흡에 집중하는 홈 트레이닝 <br /> 요가복·매트·소도구 기획전',
-    mobile_image: `${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL}/banners/banner-mobile-1.webp`,
-    tablet_image: `${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL}/banners/banner-tablet-1.webp`,
+    mobile_image: `${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL}/banners/intro-banner-01-mobile.avif`,
+    tablet_image: `${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL}/banners/intro-banner-01-tablet.avif`,
     desktop_image: `${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL}/banners/intro-banner-01.avif`,
     banner_alt: '요가하는 사람의 모습 배너 이미지',
   },
@@ -23,8 +21,8 @@ const bannerList = [
     id: 2,
     title: '블루비치 <br/> 캠핑 체어 무드',
     description: '푸른 바다와 모래사장 앞에서 즐기는 <br/> 감성 캠핑·피크닉 컬렉션',
-    mobile_image: `${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL}/banners/banner-mobile-2.webp`,
-    tablet_image: `${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL}/banners/banner-tablet-2.webp`,
+    mobile_image: `${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL}/banners/intro-banner-02-mobile.avif`,
+    tablet_image: `${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL}/banners/intro-banner-02-tablet.avif`,
     desktop_image: `${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL}/banners/intro-banner-2.avif`,
     banner_alt: '관광지 바다 관경 배너 이미지',
   },
@@ -32,17 +30,17 @@ const bannerList = [
     id: 3,
     title: '아티장 베이커리 <br/> 바게트 셀렉션',
     description: '겉은 바삭하고 속은 촉촉한 <br/> 프리미엄 브레드 라인업.',
-    mobile_image: `${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL}/banners/banner-mobile-3.webp`,
-    tablet_image: `${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL}/banners/banner-tablet-3.webp`,
-    desktop_image: `${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL}/banners/intro-banner-3.avif`,
+    mobile_image: `${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL}/banners/intro-banner-03-mobile.avif`,
+    tablet_image: `${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL}/banners/intro-banner-03-tablet.avif`,
+    desktop_image: `${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL}/banners/intro-banner-03.avif`,
     banner_alt: '방울 토마토가 여러개 열려있는 모습 배너 이미지',
   },
   {
     id: 4,
     title: '파인 다이닝 <br/> 씨푸드 오마카세',
     description: '정교하게 플레이팅된 조개 스시로 <br/> 완성한 프리미엄 미식 경험',
-    mobile_image: `${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL}/banners/banner-mobile-4.webp`,
-    tablet_image: `${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL}/banners/banner-tablet-4.webp`,
+    mobile_image: `${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL}/banners/intro-banner-04-mobile.avif`,
+    tablet_image: `${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL}/banners/intro-banner-04-tablet.avif`,
     desktop_image: `${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL}/banners/intro-banner-04.avif`,
     banner_alt: '애플 스토어 로고 배너 이미지',
   },
@@ -141,9 +139,15 @@ export const VisualBanner = () => {
   const [isPlaying, setIsPlaying] = useState(true)
   const [isHovering, setIsHovering] = useState(false)
   const [isResizing, setIsResizing] = useState(false)
-  const [viewportWidth, setViewportWidth] = useState(1280)
+  const [viewportMode, setViewportMode] = useState<'mobile' | 'tablet' | 'desktop'>('desktop')
   const resizeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const swiperRef = useRef<SwiperType | null>(null)
+
+  const getViewportMode = () => {
+    if (window.matchMedia('(max-width: 767px)').matches) return 'mobile' as const
+    if (window.matchMedia('(max-width: 1279px)').matches) return 'tablet' as const
+    return 'desktop' as const
+  }
 
   const handleSlideChange = (swiper: SwiperType) => {
     setActiveIndex(swiper.realIndex)
@@ -156,16 +160,6 @@ export const VisualBanner = () => {
   const handleNext = () => {
     const swiper = swiperRef.current
     if (!swiper) return
-
-    if (swiper.isEnd) {
-      swiper.slideTo(0, 900, true)
-      if (swiper.autoplay && isPlaying) {
-        setTimeout(() => {
-          swiper.autoplay?.start()
-        }, 920)
-      }
-      return
-    }
 
     swiper.slideNext()
   }
@@ -193,21 +187,34 @@ export const VisualBanner = () => {
       }
 
       resizeTimerRef.current = setTimeout(() => {
-        setViewportWidth(window.innerWidth)
+        setViewportMode(getViewportMode())
         setIsResizing(false)
 
         const swiper = swiperRef.current
         if (swiper) {
           swiper.update()
         }
-      }, 300)
+      }, 120)
     }
 
-    setViewportWidth(window.innerWidth)
+    const handleViewportModeChange = () => {
+      setViewportMode(getViewportMode())
+    }
+
+    const mobileMq = window.matchMedia('(max-width: 767px)')
+    const tabletMq = window.matchMedia('(min-width: 768px) and (max-width: 1279px)')
+
+    setViewportMode(getViewportMode())
     window.addEventListener('resize', handleResize)
+    window.visualViewport?.addEventListener('resize', handleResize)
+    mobileMq.addEventListener('change', handleViewportModeChange)
+    tabletMq.addEventListener('change', handleViewportModeChange)
 
     return () => {
       window.removeEventListener('resize', handleResize)
+      window.visualViewport?.removeEventListener('resize', handleResize)
+      mobileMq.removeEventListener('change', handleViewportModeChange)
+      tabletMq.removeEventListener('change', handleViewportModeChange)
       if (resizeTimerRef.current) {
         clearTimeout(resizeTimerRef.current)
       }
@@ -218,8 +225,8 @@ export const VisualBanner = () => {
   const activeTextColor = getContrastTextColor(activeBgColor)
 
   const getResponsiveImageSrc = (banner: (typeof bannerList)[number]) => {
-    if (viewportWidth < 768) return banner.mobile_image
-    if (viewportWidth < 1280) return banner.tablet_image
+    if (viewportMode === 'mobile') return banner.mobile_image
+    if (viewportMode === 'tablet') return banner.tablet_image
     return banner.desktop_image
   }
 
@@ -241,134 +248,146 @@ export const VisualBanner = () => {
     swiper.autoplay.stop()
   }, [isResizing, isPlaying, isHovering])
 
+  const currentSlideText = String(activeIndex + 1).padStart(2, '0')
+  const totalSlideText = String(bannerList.length).padStart(2, '0')
+
   return (
-    <div
-      className="aspect-[9/14] w-full transition-colors duration-500 sm:aspect-[4/5] md:aspect-[3/2] xl:aspect-[120/41]"
-      style={{ backgroundColor: activeBgColor }}
+    <Swiper
+      onSwiper={(swiper) => {
+        swiperRef.current = swiper
+      }}
+      onMouseEnter={() => {
+        setIsHovering(true)
+      }}
+      onMouseLeave={() => {
+        setIsHovering(false)
+      }}
+      className={isResizing ? 'h-full [&_.swiper-slide]:!transition-none [&_.swiper-wrapper]:!transition-none' : 'h-full'}
+      modules={[Autoplay]}
+      autoplay={{ delay: 5000, disableOnInteraction: false, pauseOnMouseEnter: true }}
+      centeredSlides={false}
+      spaceBetween={0}
+      slidesPerView={1}
+      loop={true}
+      speed={isResizing ? 0 : 900}
+      allowTouchMove={!isResizing}
+      updateOnWindowResize={false}
+      roundLengths={true}
+      onSlideChange={handleSlideChange}
     >
-      <Swiper
-        onSwiper={(swiper) => {
-          swiperRef.current = swiper
-        }}
-        onMouseEnter={() => {
-          setIsHovering(true)
-        }}
-        onMouseLeave={() => {
-          setIsHovering(false)
-        }}
-        className={isResizing ? 'h-full [&_.swiper-wrapper]:!transition-none' : 'h-full'}
-        modules={[Autoplay, EffectFade]}
-        effect="fade"
-        fadeEffect={{ crossFade: true }}
-        parallax={false}
-        autoplay={{ delay: 5000, disableOnInteraction: false, pauseOnMouseEnter: true }}
-        spaceBetween={0}
-        slidesPerView={1}
-        loop={false}
-        speed={900}
-        allowTouchMove={!isResizing}
-        updateOnWindowResize={false}
-        onSlideChange={handleSlideChange}
-      >
-        {bannerList.map((banner, index) => (
-          <SwiperSlide key={banner.id}>
-            {(() => {
-              const isActiveSlide = activeIndex === index
+      {bannerList.map((banner, index) => (
+        <SwiperSlide key={banner.id}>
+          {(() => {
+            const isActiveSlide = activeIndex === index
 
-              return (
-                <>
+            return (
+              <div className="aspect-[2/3] md:aspect-[640/427] lg:aspect-[512/175]">
+                <div
+                  className={
+                    isResizing
+                      ? 'container relative mx-auto flex h-full items-center overflow-hidden px-4 sm:px-6 md:px-10 lg:px-16 xl:px-24'
+                      : 'container relative mx-auto flex h-full items-start overflow-hidden px-4 pt-[30%] sm:items-center sm:px-6 sm:pt-0 md:px-10 lg:px-16 xl:px-24'
+                  }
+                >
                   <div
-                    className="container relative mx-auto flex h-full items-center overflow-hidden px-4 sm:px-6 md:px-10 lg:px-16 xl:px-24"
-                    style={{ backgroundColor: activeBgColor }}
+                    className={`z-1 relative mx-auto flex w-[90%] max-w-[560px] flex-col items-center px-4 py-5 text-center duration-700 sm:w-[74%] sm:px-5 sm:py-6 md:mx-0 md:w-[64%] md:items-start md:px-7 md:py-7 md:text-left lg:w-[58%] lg:max-w-[680px] ${isResizing ? 'transition-none' : 'transition-all'} ${isActiveSlide ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-80'}`}
                   >
-                    <div className="absolute inset-0 transition-colors duration-500" style={{ backgroundColor: activeBgColor }} />
-                    <div
-                      className={`z-1 relative mx-auto flex max-w-[90%] flex-col items-center text-center transition-all duration-700 sm:max-w-[74%] md:mx-0 md:max-w-[64%] md:items-start md:text-left lg:max-w-[58%] ${isActiveSlide ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-80'}`}
+                    <h3
+                      className={`relative text-[clamp(1.4rem,4.1vw,3.25rem)] font-bold leading-[1.35] drop-shadow-[0_2px_8px_rgba(0,0,0,0.36)] delay-300 duration-700 ${isResizing ? 'transition-none' : 'transition-all'} ${isActiveSlide ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'}`}
+                      style={{
+                        color: activeTextColor,
+                      }}
+                      dangerouslySetInnerHTML={{ __html: banner.title }}
+                    />
+                    <p
+                      className={`delay-450 mt-[clamp(0.45rem,0.95vw,0.78rem)] text-[clamp(0.9rem,1.65vw,1.15rem)] leading-[1.6] drop-shadow-[0_2px_6px_rgba(0,0,0,0.3)] duration-700 ${isResizing ? 'transition-none' : 'transition-all'} ${isActiveSlide ? 'translate-y-0 opacity-100' : 'translate-y-7 opacity-0'}`}
+                      style={{
+                        color: withAlpha(activeTextColor, 0.92),
+                      }}
+                      dangerouslySetInnerHTML={{ __html: banner.description }}
+                    />
+                    <button
+                      type="button"
+                      className={`delay-550 bg-white/18 hover:bg-white/26 group mt-[clamp(0.95rem,2.1vw,1.5rem)] inline-flex min-h-[2.5rem] cursor-pointer items-center gap-2 rounded-full border border-white/50 px-[clamp(1.2rem,2.4vw,1.7rem)] py-[clamp(0.5rem,1.05vw,0.74rem)] text-[clamp(0.9rem,1.28vw,1.06rem)] font-semibold text-white shadow-[0_10px_24px_rgba(0,0,0,0.2)] backdrop-blur-xl backdrop-saturate-150 duration-500 hover:-translate-y-0.5 hover:border-white/70 hover:text-white hover:shadow-[0_14px_30px_rgba(255,255,255,0.2)] ${isResizing ? 'transition-none' : 'transition-all'} ${isActiveSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}
                     >
-                      <h3
-                        className={`text-shadow-2xs relative text-[clamp(1.25rem,3.8vw,3.25rem)] font-semibold leading-[1.35] transition-all duration-700 ${isActiveSlide ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'}`}
-                        style={{
-                          color: activeTextColor,
-                        }}
-                        dangerouslySetInnerHTML={{ __html: banner.title }}
-                      />
-                      <p
-                        className={`text-shadow-2xs mt-[clamp(0.35rem,0.85vw,0.75rem)] text-[clamp(0.78rem,1.55vw,1.15rem)] leading-[1.6] transition-all delay-100 duration-700 ${isActiveSlide ? 'translate-y-0 opacity-100' : 'translate-y-7 opacity-0'}`}
-                        style={{
-                          color: withAlpha(activeTextColor, 0.92),
-                        }}
-                        dangerouslySetInnerHTML={{ __html: banner.description }}
-                      />
-                      <button
-                        type="button"
-                        className={`group mt-[clamp(0.8rem,1.9vw,1.45rem)] inline-flex min-h-[2.4rem] cursor-pointer items-center gap-2 rounded-full bg-white/90 px-[clamp(1.1rem,2.2vw,1.65rem)] py-[clamp(0.45rem,0.95vw,0.72rem)] text-[clamp(0.82rem,1.18vw,1.05rem)] font-semibold text-gray-900 shadow-md transition-all delay-150 duration-500 hover:-translate-y-0.5 hover:bg-white hover:shadow-xl ${isActiveSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}
+                      <span className="transition-transform duration-150 group-hover:translate-x-0.5">자세히 보기</span>
+                      <svg
+                        aria-hidden
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        className="h-[0.95em] w-[0.95em] transition-transform duration-150 group-hover:translate-x-1"
+                        xmlns="http://www.w3.org/2000/svg"
                       >
-                        <span className="transition-transform duration-150 group-hover:translate-x-0.5">자세히 보기</span>
-                        <svg
-                          aria-hidden
-                          viewBox="0 0 20 20"
-                          fill="none"
-                          className="h-[0.95em] w-[0.95em] transition-transform duration-150 group-hover:translate-x-1"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path d="M7 4l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      </button>
-                    </div>
+                        <path d="M7 4l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </button>
                   </div>
-                  <Image
-                    src={getResponsiveImageSrc(banner)}
-                    alt={banner.banner_alt}
-                    width={1920}
-                    height={1080}
-                    className="absolute left-0 top-0 h-full w-full object-cover"
-                    quality={100}
-                    sizes="100vw"
-                    priority={index === 0}
-                    loading={index === 0 ? 'eager' : 'lazy'}
-                    fetchPriority={index === 0 ? 'high' : 'auto'}
-                  />
-                </>
-              )
-            })()}
-          </SwiperSlide>
-        ))}
-
-        <div className="pointer-events-none absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/25 bg-black/35 px-2.5 py-1.5 shadow-[0_10px_30px_rgba(0,0,0,0.28)] backdrop-blur-md sm:bottom-5 sm:gap-2.5 sm:px-3.5 sm:py-2">
-          <div className="pointer-events-auto">
-            <PagingBtn direction="back" clickEvent={handlePrev} />
-          </div>
-          <button
-            type="button"
-            aria-label={isPlaying ? 'swiper pause button' : 'swiper play button'}
-            onClick={handleTogglePlay}
-            className="pointer-events-auto flex h-9 min-w-9 items-center justify-center rounded-full border border-white/45 bg-white/80 px-2 text-gray-900 shadow-[0_4px_14px_rgba(15,23,42,0.18)] backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 sm:h-10 sm:min-w-10"
-          >
-            {isPlaying ? <BsPauseFill className="text-base sm:text-lg" /> : <BsPlayFill className="text-base sm:text-lg" />}
-          </button>
-          <div className="pointer-events-auto">
-            <PagingBtn direction="forward" clickEvent={handleNext} />
-          </div>
-
-          <div className="ml-1 flex items-center gap-1.5 sm:ml-2 sm:gap-2">
-            {bannerList.map((banner, index) => {
-              const isActive = activeIndex === index
-
-              return (
-                <span
-                  key={`banner-pagination-dot-${banner.id}`}
-                  className={`h-1.5 rounded-full transition-all duration-300 ${isActive ? 'w-4 bg-white shadow-[0_0_0_2px_rgba(255,255,255,0.18)] sm:w-5' : 'w-1.5 bg-white/55'}`}
-                  aria-hidden
+                </div>
+                <Image
+                  key={`${banner.id}-${viewportMode}`}
+                  src={getResponsiveImageSrc(banner)}
+                  alt={banner.banner_alt}
+                  width={1920}
+                  height={1080}
+                  className="absolute left-1/2 top-0 h-full w-[calc(100%-32px)] -translate-x-1/2 rounded-[20px] object-cover sm:rounded-[28px] md:rounded-[36px] xl:rounded-[54px]"
+                  quality={100}
+                  sizes="100vw"
+                  loading={index === 0 ? 'eager' : 'lazy'}
                 />
-              )
-            })}
+              </div>
+            )
+          })()}
+        </SwiperSlide>
+      ))}
 
-            <span className="pointer-events-none min-w-10 text-center text-[11px] font-semibold tracking-wide text-white/95 sm:min-w-12 sm:text-xs">
-              {activeIndex + 1}/{bannerList.length}
-            </span>
-          </div>
-        </div>
-      </Swiper>
-    </div>
+      <button
+        type="button"
+        aria-label="visual banner previous slide"
+        onClick={handlePrev}
+        className="absolute left-0 top-1/2 z-20 flex h-[clamp(2.9rem,4.7vw,3.9rem)] w-[clamp(2.9rem,4.7vw,3.9rem)] -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-white/55 bg-black/35 text-white backdrop-blur-sm transition-all duration-200 hover:-translate-y-[52%] hover:bg-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+      >
+        <svg
+          aria-hidden
+          viewBox="0 0 20 20"
+          fill="none"
+          className="h-[clamp(1.15rem,1.9vw,1.55rem)] w-[clamp(1.15rem,1.9vw,1.55rem)]"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path d="M12.5 4.5L7 10l5.5 5.5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+
+      <button
+        type="button"
+        aria-label="visual banner next slide"
+        onClick={handleNext}
+        className="absolute right-0 top-1/2 z-20 flex h-[clamp(2.9rem,4.7vw,3.9rem)] w-[clamp(2.9rem,4.7vw,3.9rem)] -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-white/55 bg-black/35 text-white backdrop-blur-sm transition-all duration-200 hover:-translate-y-[52%] hover:bg-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+      >
+        <svg
+          aria-hidden
+          viewBox="0 0 20 20"
+          fill="none"
+          className="h-[clamp(1.15rem,1.9vw,1.55rem)] w-[clamp(1.15rem,1.9vw,1.55rem)]"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path d="M7.5 4.5L13 10l-5.5 5.5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+
+      <div className="bg-white/18 absolute bottom-3 left-1/2 z-20 inline-flex w-fit -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-2xl border border-white/35 px-3 py-2 text-white shadow-[0_10px_28px_rgba(0,0,0,0.22)] backdrop-blur-xl backdrop-saturate-150 sm:bottom-4 sm:gap-2.5 sm:px-3.5 sm:py-2.5">
+        <button
+          type="button"
+          aria-label={isPlaying ? 'visual banner autoplay pause' : 'visual banner autoplay play'}
+          onClick={handleTogglePlay}
+          className="flex h-8 min-w-8 cursor-pointer items-center justify-center rounded-full border border-white/45 bg-black/25 transition-all duration-200 hover:-translate-y-0.5 hover:bg-black/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+        >
+          {isPlaying ? <BsPauseFill className="text-base" /> : <BsPlayFill className="text-base" />}
+        </button>
+
+        <span className="pointer-events-none text-sm font-semibold tracking-[0.08em] text-white/95 sm:text-[15px]">
+          {currentSlideText}/{totalSlideText}
+        </span>
+      </div>
+    </Swiper>
   )
 }

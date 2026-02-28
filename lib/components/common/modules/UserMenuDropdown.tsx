@@ -21,7 +21,7 @@ export const UserMenuDropdown = ({ sessionUser, isScrolled }: UserMenuDropdownPr
     <div className="relative">
       <button
         onClick={() => showTooltip(TooltipTypes.DROP_DWN)}
-        className="block h-10 w-10 overflow-hidden rounded-[50%] border-2 border-gray-300 bg-white shadow-lg transition-all duration-300"
+        className="block h-10 w-10 cursor-pointer overflow-hidden rounded-[50%] border-2 border-gray-300 bg-white shadow-lg transition-all duration-300 hover:-translate-y-0.5"
       >
         <span className="sr-only">사용자 프로필 이미지</span>
         {sessionUser?.profile_img === 'undefined' ? (
