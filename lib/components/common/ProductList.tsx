@@ -1,6 +1,6 @@
 'use client'
 import { useProductsStore } from '@/lib/stores/productsStore'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Category } from './Category'
 import { LoadingSpinner } from './modules/LoadingSpinner'
 import { useInView } from 'react-intersection-observer'
@@ -25,7 +25,8 @@ export const ProductList = () => {
     toggleCartStatus,
     toggleWishStatus,
     setSessionUpdate,
-    totalProducts,
+    hasMore,
+    resetStore,
   } = useProductsStore()
 
   const [page, setPage] = useState(1)
@@ -34,9 +35,7 @@ export const ProductList = () => {
   const [hasInitialFetchCompleted, setHasInitialFetchCompleted] = useState(false)
   const isInitialLoading = !hasInitialFetchCompleted || (loading && filteredData.length === 0)
 
-  // 마지막 페이지 계산을 useMemo로 최적화
-  const lastPage = useMemo(() => Math.ceil(totalProducts / pageSize), [totalProducts, pageSize])
-  const hasMorePages = page <= lastPage
+  const hasMorePages = hasMore
 
   const { ref: triggerRef, inView: triggerInVeiw } = useInView({
     threshold: 0.35,
@@ -64,7 +63,11 @@ export const ProductList = () => {
 
   useEffect(() => {
     loadInitialData()
-  }, [loadInitialData])
+
+    return () => {
+      resetStore()
+    }
+  }, [loadInitialData, resetStore])
 
   // 3. 무한 스크롤 Trigger (데이터 중복 로드 방지)
   const [loadingMore, setLoadingMore] = useState(false)
@@ -83,7 +86,7 @@ export const ProductList = () => {
         }
       }
     }, 600),
-    [loading, isEmpty, hasMorePages, loadingMore, loadMoreData, pageSize],
+    [loading, isEmpty, hasMorePages, loadingMore, loadMoreData, page, pageSize],
   )
 
   useEffect(() => {

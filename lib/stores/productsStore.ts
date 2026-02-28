@@ -36,6 +36,7 @@ interface ProductsStore {
   currentPage: number
   hasMore: boolean
   loading: boolean
+  currentRequestId: number
   setCategoryFilter: (category: string) => void
   fetchData: (page: number, pageSize: number) => Promise<void>
   allData: ProductType[]
@@ -176,49 +177,36 @@ export const useProductsStore = create<ProductsStore>((set, get) => ({
   currentPage: 1,
   hasMore: true,
   loading: false,
+  currentRequestId: 0,
 
   cartlistLength: 0,
 
   // 카테고리 필터링
   setCategoryFilter: async (category: string) => {
-    // 실제 필터링 로직 (필터링 완료 후 상태 업데이트)
-    const { data, filteredData } = get()
-
-    const syncedData = data.map((item) => {
-      const matchingFilteredItem = filteredData.find((filteredItem) => filteredItem.idx === item.idx)
-      return matchingFilteredItem ? { ...item, ...matchingFilteredItem } : item
-    })
-
-    let filteredByCategory
-
-    if (category === '전체') {
-      filteredByCategory = syncedData
-    } else {
-      filteredByCategory = syncedData.filter((product) => product.category === category)
-    }
-
-    set({
-      selectedCategory: category,
-      filteredData: filteredByCategory,
-      currentPage: 1,
-      hasMore: true,
-      data: syncedData, // 데이터 동기화
-    })
+    const { fetchData } = get()
+    set({ selectedCategory: category, currentPage: 1, hasMore: true, isEmpty: false })
+    await fetchData(1, 8)
   },
   fetchData: async (page: number, pageSize: number): Promise<void> => {
-    set({ loading: true })
+    const requestId = get().currentRequestId + 1
+    set({ loading: true, currentRequestId: requestId })
+
+    const category = get().selectedCategory
 
     try {
       //products -> DB에서 위시리스트와 장바구니를 뒤져서 현재 데이터에 같은 값이 있으면 isInwish, isInCart boolean 값으로 표시한 데이터
-      const { products, totalProducts } = await fetchProducts({ page, pageSize })
+      const { products, totalProducts } = await fetchProducts({ page, pageSize, category })
+
+      if (get().currentRequestId !== requestId) return
 
       set({
         data: products, //전체 데이터
-        filteredData: products, //필터링에 사용할 데이터
+        filteredData: products,
         category: Array.from(new Set(products.map((product) => product.category))),
         totalProducts,
         isEmpty: products.length === 0,
-        selectedCategory: '전체',
+        currentPage: page,
+        hasMore: products.length >= pageSize,
       })
     } catch (error) {
       console.error('Error fetching products:', error)
@@ -230,21 +218,23 @@ export const useProductsStore = create<ProductsStore>((set, get) => ({
 
   // 무한 스크롤을 위한 데이터 로드
   loadMoreData: async (page: number, pageSize: number) => {
-    const { selectedCategory, data } = get()
+    const { selectedCategory, data, currentRequestId } = get()
 
     set({ loading: true })
 
     try {
-      const { products } = await fetchProducts({ page, pageSize })
+      const { products } = await fetchProducts({ page, pageSize, category: selectedCategory })
+
+      if (get().currentRequestId !== currentRequestId) return
 
       // 중복 제거 로직 추가
       const mergedData = [...data, ...products.filter((newProduct) => !data.some((existingProduct) => existingProduct.idx === newProduct.idx))]
 
-      const filteredData = selectedCategory === '전체' ? mergedData : mergedData.filter((product) => product.category === selectedCategory)
-
       set({
         data: mergedData,
-        filteredData,
+        filteredData: mergedData,
+        currentPage: page,
+        hasMore: products.length >= pageSize,
         isEmpty: products.length === 0,
       })
     } catch (error) {

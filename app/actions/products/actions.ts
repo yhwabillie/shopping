@@ -7,6 +7,7 @@ import { getServerSession } from 'next-auth'
 interface FetchProductsParams {
   page: number
   pageSize: number
+  category?: string
 }
 
 export interface ProductType {
@@ -82,17 +83,23 @@ export const fetchAllProducts = async () => {
  *
  * @throws {Error}
  */
-export const fetchProducts = async ({ page, pageSize }: FetchProductsParams): Promise<{ products: ProductType[]; totalProducts: number }> => {
+export const fetchProducts = async ({
+  page,
+  pageSize,
+  category,
+}: FetchProductsParams): Promise<{ products: ProductType[]; totalProducts: number }> => {
   const skip = (page - 1) * pageSize
   const take = pageSize
   const session = await getServerSession(authOptions)
   const userIdx = session?.user?.idx
+  const categoryFilter = category && category !== '전체' ? category : undefined
 
   try {
     const [products, totalProducts] = await Promise.all([
       prisma.product.findMany({
         skip,
         take,
+        where: categoryFilter ? { category: categoryFilter } : undefined,
         orderBy: [
           { createdAt: 'asc' },
           { idx: 'asc' }, // 유니크한 필드를 추가하여 순서를 명확히 지정
@@ -106,7 +113,7 @@ export const fetchProducts = async ({ page, pageSize }: FetchProductsParams): Pr
           imageUrl: true,
         },
       }),
-      prisma.product.count(),
+      prisma.product.count({ where: categoryFilter ? { category: categoryFilter } : undefined }),
     ])
 
     // 미리 장바구니와 위시리스트 항목을 가져옴

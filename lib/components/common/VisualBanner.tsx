@@ -283,7 +283,7 @@ export const VisualBanner = () => {
                   >
                     <div className="absolute inset-0 transition-colors duration-500" style={{ backgroundColor: activeBgColor }} />
                     <div
-                      className={`z-1 relative max-w-[90%] transition-all duration-700 sm:max-w-[74%] md:max-w-[64%] lg:max-w-[58%] ${isActiveSlide ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-80'}`}
+                      className={`z-1 relative mx-auto flex max-w-[90%] flex-col items-center text-center transition-all duration-700 sm:max-w-[74%] md:mx-0 md:max-w-[64%] md:items-start md:text-left lg:max-w-[58%] ${isActiveSlide ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-80'}`}
                     >
                       <h3
                         className={`text-shadow-2xs relative text-[clamp(1.25rem,3.8vw,3.25rem)] font-semibold leading-[1.35] transition-all duration-700 ${isActiveSlide ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'}`}
@@ -301,10 +301,16 @@ export const VisualBanner = () => {
                       />
                       <button
                         type="button"
-                        className={`mt-[clamp(0.8rem,1.9vw,1.45rem)] inline-flex min-h-[2.4rem] cursor-pointer items-center gap-2 rounded-full bg-white/90 px-[clamp(1.1rem,2.2vw,1.65rem)] py-[clamp(0.45rem,0.95vw,0.72rem)] text-[clamp(0.82rem,1.18vw,1.05rem)] font-semibold text-gray-900 shadow-md transition-all delay-150 duration-700 hover:bg-white ${isActiveSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}
+                        className={`group mt-[clamp(0.8rem,1.9vw,1.45rem)] inline-flex min-h-[2.4rem] cursor-pointer items-center gap-2 rounded-full bg-white/90 px-[clamp(1.1rem,2.2vw,1.65rem)] py-[clamp(0.45rem,0.95vw,0.72rem)] text-[clamp(0.82rem,1.18vw,1.05rem)] font-semibold text-gray-900 shadow-md transition-all delay-150 duration-500 hover:-translate-y-0.5 hover:bg-white hover:shadow-xl ${isActiveSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}
                       >
-                        <span>자세히 보기</span>
-                        <svg aria-hidden viewBox="0 0 20 20" fill="none" className="h-[0.95em] w-[0.95em]" xmlns="http://www.w3.org/2000/svg">
+                        <span className="transition-transform duration-150 group-hover:translate-x-0.5">자세히 보기</span>
+                        <svg
+                          aria-hidden
+                          viewBox="0 0 20 20"
+                          fill="none"
+                          className="h-[0.95em] w-[0.95em] transition-transform duration-150 group-hover:translate-x-1"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
                           <path d="M7 4l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                       </button>
