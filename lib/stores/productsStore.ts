@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { toast } from 'sonner'
 import { fetchAllProducts, fetchProducts, ProductType, toggleProductToCart, toggleWishStatus } from '@/app/actions/products/actions'
+import { fetchAutoCompleteProducts } from '@/app/actions/search/actions'
 import { debounce } from '../debounce'
 
 interface ProductsStore {
@@ -37,6 +38,7 @@ interface ProductsStore {
   hasMore: boolean
   listLoading: boolean
   autoCompleteLoading: boolean
+  autoCompleteRequestId: number
   toggleLoading: boolean
   currentRequestId: number
   setCategoryFilter: (category: string) => void
@@ -116,33 +118,31 @@ export const useProductsStore = create<ProductsStore>((set, get) => ({
 
   // 카테고리와 이름을 기준으로 자동완성 결과 가져오기
   fetchAutoCompleteSuggestions: debounce(async (query: string) => {
-    if (!query.trim()) {
-      set({ autoCompleteSuggestions: [] })
+    const normalizedQuery = query.trim()
+
+    if (!normalizedQuery) {
+      set({ autoCompleteSuggestions: [], autoCompleteLoading: false })
       return
     }
 
-    const { fetchAllData } = get()
-    set({ autoCompleteLoading: true })
-
-    const allData = await fetchAllData()
-
-    if (!allData) {
-      console.log('no data')
-      return
-    }
+    const requestId = get().autoCompleteRequestId + 1
+    set({ autoCompleteLoading: true, autoCompleteRequestId: requestId })
 
     try {
-      // 이름과 카테고리로 검색어 필터링
-      const suggestions = allData.allProducts.filter(
-        (product) => product.name.toLowerCase().includes(query.toLowerCase()) || product.category.toLowerCase().includes(query.toLowerCase()),
-      )
+      const suggestions = await fetchAutoCompleteProducts(normalizedQuery, 10)
+
+      if (get().autoCompleteRequestId !== requestId) {
+        return
+      }
 
       set({ autoCompleteSuggestions: suggestions })
     } catch (error) {
       console.error('Error fetching suggestions:', error)
       toast.error('자동완성 데이터를 가져오는 중 오류가 발생했습니다.')
     } finally {
-      set({ autoCompleteLoading: false })
+      if (get().autoCompleteRequestId === requestId) {
+        set({ autoCompleteLoading: false })
+      }
     }
   }, 300),
 
@@ -180,6 +180,7 @@ export const useProductsStore = create<ProductsStore>((set, get) => ({
   hasMore: true,
   listLoading: false,
   autoCompleteLoading: false,
+  autoCompleteRequestId: 0,
   toggleLoading: false,
   currentRequestId: 0,
 
@@ -238,7 +239,13 @@ export const useProductsStore = create<ProductsStore>((set, get) => ({
 
   // 무한 스크롤을 위한 데이터 로드
   loadMoreData: async (page: number, pageSize: number) => {
-    const { selectedCategory } = get()
+    const { selectedCategory, listLoading, hasMore, totalProducts, data } = get()
+
+    // 모든 데이터 로드 완료 또는 로딩 중이면 추가 요청 차단
+    if (listLoading || !hasMore || (totalProducts > 0 && data.length >= totalProducts)) {
+      return
+    }
+
     const requestId = get().currentRequestId + 1
 
     set({ listLoading: true, currentRequestId: requestId })
@@ -255,18 +262,21 @@ export const useProductsStore = create<ProductsStore>((set, get) => ({
           ...products.filter((newProduct) => !state.data.some((existingProduct) => existingProduct.idx === newProduct.idx)),
         ]
 
+        const nextHasMore = products.length > 0 && mergedData.length < totalProducts
+
         return {
           data: mergedData,
           filteredData: mergedData,
           totalProducts,
           currentPage: page,
-          hasMore: mergedData.length < totalProducts,
+          hasMore: nextHasMore,
           isEmpty: mergedData.length === 0,
         }
       })
     } catch (error) {
       console.error('Error fetching more products:', error)
       toast.error('추가 데이터를 가져오는 중 오류가 발생했습니다.')
+      set({ hasMore: false })
     } finally {
       set({ listLoading: false })
     }

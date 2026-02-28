@@ -16,8 +16,17 @@ export const SearchResult = () => {
   const searchParams = useSearchParams()
   const { status, update } = useSession()
   const query = searchParams.get('query') || ''
-  const { allData, setSearchQuery, toggleCartStatus, loadedImages, resetLoadedImages, setLoadedImages, toggleWishStatus, setSessionUpdate } =
-    useProductsStore()
+  const {
+    allData,
+    setSearchQuery,
+    fetchAllData,
+    toggleCartStatus,
+    loadedImages,
+    resetLoadedImages,
+    setLoadedImages,
+    toggleWishStatus,
+    setSessionUpdate,
+  } = useProductsStore()
 
   const results = allData.filter(
     (product) => product.name.toLowerCase().includes(query.toLowerCase()) || product.category.toLowerCase().includes(query.toLowerCase()),
@@ -35,6 +44,7 @@ export const SearchResult = () => {
   }, [setSessionUpdate, status])
 
   useEffect(() => {
+    fetchAllData()
     setSearchQuery(query)
 
     resetLoadedImages()
@@ -44,7 +54,7 @@ export const SearchResult = () => {
       initialLoadedImages[index] = false
     })
     setLoadedImages(initialLoadedImages)
-  }, [query, setSearchQuery])
+  }, [query, setSearchQuery, fetchAllData])
 
   //위시토글
   const handleClickAddWish = (targetItem: ProductType) => {

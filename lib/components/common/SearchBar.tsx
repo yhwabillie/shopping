@@ -2,8 +2,8 @@
 import { ProductType } from '@/app/actions/products/actions'
 import { useProductsStore } from '@/lib/stores/productsStore'
 import clsx from 'clsx'
-import { useRouter } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { IoSearch } from 'react-icons/io5'
 import { AiFillCloseCircle } from 'react-icons/ai'
 import { LoadingSpinner } from './modules/LoadingSpinner'
@@ -14,30 +14,69 @@ interface SearchBarProps {
 
 export const SearchBar = ({ isScrolled }: SearchBarProps) => {
   const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   const [isFocus, setIsFocus] = useState(false)
   const [inputValue, setInputValue] = useState('') // 검색어를 상태로 관리
-  const [activeIndex, setActiveIndex] = useState(-2) // 활성화된 아이템의 인덱스 (-1은 기본값으로 검색창에 있는 값을 의미)
+  const [activeIndex, setActiveIndex] = useState(-1)
   const { setSearchQuery, selectSearchResult, autoCompleteSuggestions, autoCompleteLoading, setAutoCompleteSuggestions } = useProductsStore()
 
   const searchBarRef = useRef<HTMLFieldSetElement>(null)
-  const originalInputValue = useRef(inputValue) // 사용자가 입력한 원래 검색어를 저장
+  const listboxId = useId()
+  const normalizedCurrentQuery = (searchParams.get('query') || '').trim()
+  const visibleSuggestions = useMemo(() => autoCompleteSuggestions.slice(0, 8), [autoCompleteSuggestions])
 
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(event.target.value)
-    originalInputValue.current = event.target.value // 원래 검색어 업데이트
-    setSearchQuery(event.target.value)
+  const highlightMatchedText = (text: string, query: string) => {
+    const normalizedQuery = query.trim()
 
-    setIsFocus(true) // 키보드 움직임이 감지되면 패널을 보이게 함
+    if (!normalizedQuery) {
+      return text
+    }
+
+    const escapedQuery = normalizedQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const matchRegex = new RegExp(`(${escapedQuery})`, 'ig')
+    const segments = text.split(matchRegex)
+
+    return segments.map((segment, index) =>
+      segment.toLowerCase() === normalizedQuery.toLowerCase() ? (
+        <mark key={`${segment}-${index}`} className="rounded bg-blue-500/30 px-0.5 text-white">
+          {segment}
+        </mark>
+      ) : (
+        <span key={`${segment}-${index}`}>{segment}</span>
+      ),
+    )
   }
 
-  const handleSearch = (searchTerm?: string) => {
-    const query = searchTerm || inputValue.trim()
+  const executeSearch = (rawTerm?: string) => {
+    const query = (rawTerm ?? inputValue).trim()
 
-    if (query) {
-      router.push(`/search?query=${query}`)
-      setIsFocus(false)
-      setAutoCompleteSuggestions([]) // 자동완성 결과 초기화
+    if (!query) {
+      return
     }
+
+    const encodedQuery = encodeURIComponent(query)
+    const isSameSearchPageQuery = pathname === '/search' && normalizedCurrentQuery.toLowerCase() === query.toLowerCase()
+
+    setInputValue(query)
+    setSearchQuery(query)
+    setAutoCompleteSuggestions([])
+    setIsFocus(false)
+    setActiveIndex(-1)
+
+    if (!isSameSearchPageQuery) {
+      router.push(`/search?query=${encodedQuery}`)
+    }
+  }
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const nextInputValue = event.target.value
+
+    setInputValue(nextInputValue)
+    setSearchQuery(nextInputValue)
+
+    setIsFocus(true) // 키보드 움직임이 감지되면 패널을 보이게 함
+    setActiveIndex(-1)
   }
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -45,7 +84,7 @@ export const SearchBar = ({ isScrolled }: SearchBarProps) => {
 
     switch (event.key) {
       case 'ArrowDown':
-        setActiveIndex((prevIndex) => Math.min(prevIndex + 1, autoCompleteSuggestions.length - 1))
+        setActiveIndex((prevIndex) => Math.min(prevIndex + 1, visibleSuggestions.length - 1))
         event.preventDefault()
         break
 
@@ -55,17 +94,18 @@ export const SearchBar = ({ isScrolled }: SearchBarProps) => {
         break
 
       case 'Enter':
+        event.preventDefault()
         if (activeIndex === -1) {
-          handleSearch()
+          executeSearch()
         } else {
-          handleSearch(autoCompleteSuggestions[activeIndex]?.name)
+          executeSearch(visibleSuggestions[activeIndex]?.name)
         }
-        setIsFocus(false)
         break
 
       case 'Escape':
         setAutoCompleteSuggestions([])
-        setTimeout(() => setIsFocus(false), 0)
+        setIsFocus(false)
+        setActiveIndex(-1)
         break
 
       default:
@@ -75,9 +115,7 @@ export const SearchBar = ({ isScrolled }: SearchBarProps) => {
 
   const handleSuggestionClick = (suggestion: ProductType) => {
     selectSearchResult(suggestion)
-    setSearchQuery(suggestion.name)
-    setIsFocus(false)
-    router.push(`/search?query=${suggestion.name}`)
+    executeSearch(suggestion.name)
   }
 
   const handleClickOutside = (event: MouseEvent) => {
@@ -87,20 +125,27 @@ export const SearchBar = ({ isScrolled }: SearchBarProps) => {
   }
 
   useEffect(() => {
-    setActiveIndex(-2)
-    setInputValue('')
-    setAutoCompleteSuggestions([])
-
     if (isFocus) {
-      document.addEventListener('mousedown', handleClickOutside)
+      document.addEventListener('pointerdown', handleClickOutside)
     } else {
-      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('pointerdown', handleClickOutside)
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('pointerdown', handleClickOutside)
     }
   }, [isFocus])
+
+  useEffect(() => {
+    if (!isFocus) {
+      setActiveIndex(-1)
+      return
+    }
+
+    if (activeIndex >= visibleSuggestions.length) {
+      setActiveIndex(-1)
+    }
+  }, [activeIndex, isFocus, visibleSuggestions.length])
 
   return (
     <fieldset ref={searchBarRef} className="relative z-20">
@@ -115,11 +160,16 @@ export const SearchBar = ({ isScrolled }: SearchBarProps) => {
         <input
           value={inputValue}
           onKeyDown={handleKeyDown}
-          onClick={() => setIsFocus(true)}
+          onFocus={() => setIsFocus(true)}
           onChange={handleInputChange}
           type="search"
           name="search"
           title="검색어"
+          role="combobox"
+          aria-expanded={isFocus}
+          aria-controls={listboxId}
+          aria-activedescendant={activeIndex >= 0 ? `suggestion-${visibleSuggestions[activeIndex]?.idx}` : undefined}
+          aria-autocomplete="list"
           placeholder="제품 이름, 카테고리 검색"
           className={clsx('sm:text-md w-[120px] bg-primary placeholder:text-[14px] focus:outline-0 sm:w-[300px]', {
             'bg-white text-primary placeholder:text-primary/50': isScrolled,
@@ -132,13 +182,15 @@ export const SearchBar = ({ isScrolled }: SearchBarProps) => {
             type="button"
             onClick={() => {
               setInputValue('')
+              setSearchQuery('')
+              setActiveIndex(-1)
               setAutoCompleteSuggestions([]) // 검색어 초기화 시 자동완성 결과도 초기화
             }}
           >
             <AiFillCloseCircle className="text-xl text-white" />
           </button>
         )}
-        <button aria-label="search button" type="button" className=" pl-3" onClick={() => handleSearch(inputValue)}>
+        <button aria-label="search button" type="button" className=" pl-3" onClick={() => executeSearch(inputValue)}>
           <IoSearch
             className={clsx('text-xl ', {
               'text-primary': isScrolled,
@@ -151,8 +203,8 @@ export const SearchBar = ({ isScrolled }: SearchBarProps) => {
           <div className="absolute left-0 top-[38px] flex w-full flex-col justify-between rounded-2xl bg-[#212325] py-4 text-sm shadow-md">
             <div
               className={clsx('flex items-center justify-center', {
-                'h-auto': autoCompleteSuggestions.length > 0 && !autoCompleteLoading,
-                'min-h-[138px]': !(autoCompleteSuggestions.length > 0 && !autoCompleteLoading),
+                'h-auto': visibleSuggestions.length > 0 && !autoCompleteLoading,
+                'min-h-[138px]': !(visibleSuggestions.length > 0 && !autoCompleteLoading),
               })}
             >
               {autoCompleteLoading && (
@@ -161,10 +213,13 @@ export const SearchBar = ({ isScrolled }: SearchBarProps) => {
                 </div>
               )}
               {/* 자동완성 결과 */}
-              {autoCompleteSuggestions.length > 0 && !autoCompleteLoading && (
-                <ul className="flex w-full flex-col self-start">
-                  {autoCompleteSuggestions.map((suggestion, index) => (
+              {visibleSuggestions.length > 0 && !autoCompleteLoading && (
+                <ul id={listboxId} role="listbox" className="flex w-full flex-col self-start" aria-label="검색 자동완성">
+                  {visibleSuggestions.map((suggestion, index) => (
                     <li
+                      id={`suggestion-${suggestion.idx}`}
+                      role="option"
+                      aria-selected={index === activeIndex}
                       key={suggestion.idx}
                       onMouseDown={() => handleSuggestionClick(suggestion)} // 클릭 시 focus 유지
                       className={clsx(
@@ -175,13 +230,13 @@ export const SearchBar = ({ isScrolled }: SearchBarProps) => {
                       )}
                     >
                       <IoSearch className="!text-xl" />
-                      <span className="inline-block w-[calc(100%-20px)]">{suggestion.name}</span>
+                      <span className="inline-block w-[calc(100%-20px)]">{highlightMatchedText(suggestion.name, inputValue)}</span>
                     </li>
                   ))}
                 </ul>
               )}
 
-              {autoCompleteSuggestions.length === 0 && !autoCompleteLoading && (
+              {visibleSuggestions.length === 0 && !autoCompleteLoading && (
                 <p className="p-2 text-center text-sm text-[#9da5b6]">제품 이름 혹은 카테고리를 검색하세요</p>
               )}
             </div>

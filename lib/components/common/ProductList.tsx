@@ -17,6 +17,7 @@ export const ProductList = () => {
   const listLoading = useProductsStore((state) => state.listLoading)
   const isEmpty = useProductsStore((state) => state.isEmpty)
   const hasMore = useProductsStore((state) => state.hasMore)
+  const totalProducts = useProductsStore((state) => state.totalProducts)
   const currentPage = useProductsStore((state) => state.currentPage)
 
   const setSearchQuery = useProductsStore((state) => state.setSearchQuery)
@@ -39,6 +40,7 @@ export const ProductList = () => {
   const skeletonHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const hasMorePages = hasMore
+  const isAllProductsLoaded = totalProducts > 0 && filteredData.length >= totalProducts
 
   const { ref: triggerRef, inView: triggerInView } = useInView({
     threshold: 0,
@@ -81,6 +83,17 @@ export const ProductList = () => {
   }, [hasMorePages, filteredData.length, columnCount])
 
   useEffect(() => {
+    if (!hasMorePages) {
+      if (skeletonHideTimerRef.current) {
+        clearTimeout(skeletonHideTimerRef.current)
+        skeletonHideTimerRef.current = null
+      }
+
+      setShouldRenderSkeletons(false)
+      setIsSkeletonVisible(false)
+      return
+    }
+
     if (skeletonHideTimerRef.current) {
       clearTimeout(skeletonHideTimerRef.current)
       skeletonHideTimerRef.current = null
@@ -109,7 +122,7 @@ export const ProductList = () => {
         skeletonHideTimerRef.current = null
       }
     }
-  }, [isLoadingMore])
+  }, [isLoadingMore, hasMorePages])
 
   // 1. 세션 확인
   useEffect(() => {
@@ -140,7 +153,7 @@ export const ProductList = () => {
 
   // 3. 무한 스크롤 Trigger (중복 호출 방지 + store의 currentPage 기준)
   const handleLoadMore = useCallback(async () => {
-    if (isLoadingMoreRef.current || listLoading || isEmpty || !hasMorePages) return
+    if (isLoadingMoreRef.current || listLoading || isEmpty || !hasMorePages || isAllProductsLoaded) return
 
     isLoadingMoreRef.current = true
     setIsLoadingMore(true)
@@ -152,13 +165,13 @@ export const ProductList = () => {
       setIsLoadingMore(false)
       isLoadingMoreRef.current = false
     }
-  }, [listLoading, isEmpty, hasMorePages, loadMoreData, currentPage, pageSize])
+  }, [listLoading, isEmpty, hasMorePages, isAllProductsLoaded, loadMoreData, currentPage, pageSize])
 
   useEffect(() => {
-    if (triggerInView) {
+    if (triggerInView && hasMorePages && !isAllProductsLoaded) {
       handleLoadMore()
     }
-  }, [triggerInView, handleLoadMore])
+  }, [triggerInView, hasMorePages, isAllProductsLoaded, handleLoadMore])
 
   // 위시 추가 & 제거 Toggle
   const handleClickAddWish = useCallback(
@@ -213,6 +226,7 @@ export const ProductList = () => {
 
             {/* Skeleton Products (무한 스크롤 시 추가로 로드될 때 표시) */}
             {hasMorePages &&
+              isLoadingMore &&
               shouldRenderSkeletons &&
               Array.from({ length: skeletonCount }, (_, i) => (
                 <SkeletonProduct key={`skeleton-${i}`} className={isSkeletonVisible ? 'opacity-100' : 'opacity-0'} />
@@ -220,7 +234,7 @@ export const ProductList = () => {
           </ul>
         )}
 
-        {!isInitialLoading && hasMorePages && <div ref={triggerRef} className="h-12 w-full" aria-hidden />}
+        {!isInitialLoading && hasMorePages && !isAllProductsLoaded && <div ref={triggerRef} className="h-12 w-full" aria-hidden />}
 
         {isLoadingMore && (
           <div className="flex h-48 w-full items-center justify-center">
