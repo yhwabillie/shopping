@@ -334,7 +334,7 @@ export const VisualBanner = () => {
           </SwiperSlide>
         ))}
 
-        <div className="pointer-events-none absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full bg-black/25 px-2 py-1.5 backdrop-blur-sm sm:bottom-5 sm:gap-2.5 sm:px-3">
+        <div className="pointer-events-none absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/25 bg-black/35 px-2.5 py-1.5 shadow-[0_10px_30px_rgba(0,0,0,0.28)] backdrop-blur-md sm:bottom-5 sm:gap-2.5 sm:px-3.5 sm:py-2">
           <div className="pointer-events-auto">
             <PagingBtn direction="back" clickEvent={handlePrev} />
           </div>
@@ -342,7 +342,7 @@ export const VisualBanner = () => {
             type="button"
             aria-label={isPlaying ? 'swiper pause button' : 'swiper play button'}
             onClick={handleTogglePlay}
-            className="pointer-events-auto flex h-10 min-w-10 items-center justify-center rounded-full bg-white/90 px-2 text-gray-900 shadow-sm sm:h-12 sm:min-w-12"
+            className="pointer-events-auto flex h-9 min-w-9 items-center justify-center rounded-full border border-white/45 bg-white/80 px-2 text-gray-900 shadow-[0_4px_14px_rgba(15,23,42,0.18)] backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 sm:h-10 sm:min-w-10"
           >
             {isPlaying ? <BsPauseFill className="text-base sm:text-lg" /> : <BsPlayFill className="text-base sm:text-lg" />}
           </button>
@@ -350,9 +350,23 @@ export const VisualBanner = () => {
             <PagingBtn direction="forward" clickEvent={handleNext} />
           </div>
 
-          <span className="pointer-events-none ml-1 min-w-10 text-center text-xs font-semibold text-white sm:ml-2 sm:min-w-12 sm:text-sm">
-            {activeIndex + 1}/{bannerList.length}
-          </span>
+          <div className="ml-1 flex items-center gap-1.5 sm:ml-2 sm:gap-2">
+            {bannerList.map((banner, index) => {
+              const isActive = activeIndex === index
+
+              return (
+                <span
+                  key={`banner-pagination-dot-${banner.id}`}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${isActive ? 'w-4 bg-white shadow-[0_0_0_2px_rgba(255,255,255,0.18)] sm:w-5' : 'w-1.5 bg-white/55'}`}
+                  aria-hidden
+                />
+              )
+            })}
+
+            <span className="pointer-events-none min-w-10 text-center text-[11px] font-semibold tracking-wide text-white/95 sm:min-w-12 sm:text-xs">
+              {activeIndex + 1}/{bannerList.length}
+            </span>
+          </div>
         </div>
       </Swiper>
     </div>
