@@ -37,7 +37,7 @@ export const useAlertModalStore = create<alertModalStore>((set) => ({
     set((state) => ({
       modals: {
         ...state.modals,
-        [modalName]: true,
+        [modalName]: false,
       },
     })),
 }))

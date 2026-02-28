@@ -1,6 +1,7 @@
 'use client'
 import { useProductsStore } from '@/lib/stores/productsStore'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { shallow } from 'zustand/shallow'
 import { Category } from './Category'
 import { LoadingSpinner } from './modules/LoadingSpinner'
 import { useInView } from 'react-intersection-observer'
@@ -12,22 +13,32 @@ import { ProductItem } from './ProductItem'
 
 export const ProductList = () => {
   const { status, update } = useSession()
-  const {
-    filteredData,
-    setSearchQuery,
-    selectedCategory,
-    fetchData,
-    setCategoryFilter,
-    loadMoreData,
-    loading,
-    isEmpty,
-    toggleCartStatus,
-    toggleWishStatus,
-    setSessionUpdate,
-    hasMore,
-    currentPage,
-    resetStore,
-  } = useProductsStore()
+  const { filteredData, selectedCategory, loading, isEmpty, hasMore, currentPage } = useProductsStore(
+    (state) => ({
+      filteredData: state.filteredData,
+      selectedCategory: state.selectedCategory,
+      loading: state.loading,
+      isEmpty: state.isEmpty,
+      hasMore: state.hasMore,
+      currentPage: state.currentPage,
+    }),
+    shallow,
+  )
+
+  const { setSearchQuery, fetchData, setCategoryFilter, loadMoreData, toggleCartStatus, toggleWishStatus, setSessionUpdate, resetStore } =
+    useProductsStore(
+      (state) => ({
+        setSearchQuery: state.setSearchQuery,
+        fetchData: state.fetchData,
+        setCategoryFilter: state.setCategoryFilter,
+        loadMoreData: state.loadMoreData,
+        toggleCartStatus: state.toggleCartStatus,
+        toggleWishStatus: state.toggleWishStatus,
+        setSessionUpdate: state.setSessionUpdate,
+        resetStore: state.resetStore,
+      }),
+      shallow,
+    )
 
   const pageSize = 8
   const [columnCount, setColumnCount] = useState(2)

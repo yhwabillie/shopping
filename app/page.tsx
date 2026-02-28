@@ -1,7 +1,6 @@
 import dynamic from 'next/dynamic'
 
 const VisualBanner = dynamic(() => import('@/lib/components/common/VisualBanner').then((m) => m.VisualBanner), {
-  ssr: false,
   loading: () => (
     <div className="relative aspect-[9/14] w-full animate-pulse overflow-hidden bg-gradient-to-br from-slate-300/85 via-slate-200/90 to-slate-300/85 shadow-inner sm:aspect-[4/5] md:aspect-[3/2] xl:aspect-[120/41]">
       <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
@@ -21,7 +20,6 @@ const VisualBanner = dynamic(() => import('@/lib/components/common/VisualBanner'
 })
 
 const ProductList = dynamic(() => import('@/lib/components/common/ProductList').then((m) => m.ProductList), {
-  ssr: false,
   loading: () => (
     <div className="mx-auto mt-4 box-border min-w-[calc(360px-20px)] animate-pulse rounded-t-[2rem] bg-white pb-4 pt-4 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] md:mt-0 md:w-auto md:bg-transparent md:shadow-none">
       <div className="md:container md:mx-auto">

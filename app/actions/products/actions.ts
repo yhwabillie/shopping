@@ -1,7 +1,6 @@
 'use server'
 import authOptions from '@/lib/auth'
 import prisma from '@/lib/prisma'
-import { Session } from 'inspector'
 import { getServerSession } from 'next-auth'
 
 interface FetchProductsParams {
@@ -116,14 +115,38 @@ export const fetchProducts = async ({
       prisma.product.count({ where: categoryFilter ? { category: categoryFilter } : undefined }),
     ])
 
-    // 미리 장바구니와 위시리스트 항목을 가져옴
+    const productIds = products.map((item) => item.idx)
+
+    // 비로그인 상태면 상태 조회 쿼리를 생략
+    if (!userIdx) {
+      return {
+        products: products.map((item) => ({
+          ...item,
+          isInCart: false,
+          isInWish: false,
+        })),
+        totalProducts,
+      }
+    }
+
+    // 현재 페이지 상품에 대해서만 장바구니/위시 상태 조회
     const [cartItems, wishItems] = await Promise.all([
       prisma.cartList.findMany({
-        where: { userIdx },
+        where: {
+          userIdx,
+          productIdx: {
+            in: productIds,
+          },
+        },
         select: { productIdx: true },
       }),
       prisma.wishlist.findMany({
-        where: { userIdx },
+        where: {
+          userIdx,
+          productIdx: {
+            in: productIds,
+          },
+        },
         select: { productIdx: true },
       }),
     ])
