@@ -44,11 +44,11 @@ const CategoryItem = React.memo(
     onClick: (name: string) => void
   }) => {
     return (
-      <li className="mx-auto w-fit px-0.5">
+      <li className="mx-auto w-full max-w-[88px] px-0.5">
         <button
           type="button"
           onClick={() => onClick(name)}
-          className="group min-w-[68px] cursor-pointer rounded-lg transition-transform duration-200 hover:-translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+          className="group flex w-full min-w-[68px] cursor-pointer flex-col items-center rounded-lg transition-transform duration-200 hover:-translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
         >
           <p
             className={clsx(
@@ -84,7 +84,7 @@ export const Category = React.memo(({ setCategoryFilter, selectedCategory }: Cat
   return (
     <>
       <h3 className="sr-only">상품 카테고리</h3>
-      <ul className="mx-auto box-border grid grid-cols-6 gap-x-4 gap-y-3 px-8 pt-5 md:w-fit md:grid-cols-8 md:rounded-lg md:bg-white md:p-5 lg:grid-cols-10 xl:grid-cols-12">
+      <ul className="mx-auto box-border grid grid-cols-4 gap-x-2 gap-y-3 px-3 pt-4 sm:grid-cols-5 sm:gap-x-3 sm:px-4 md:w-fit md:grid-cols-8 md:gap-x-4 md:rounded-lg md:bg-white md:p-5 lg:grid-cols-10 xl:grid-cols-12">
         {categories.map((category) => (
           <CategoryItem
             key={category.name}

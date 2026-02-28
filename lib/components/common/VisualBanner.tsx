@@ -332,6 +332,7 @@ export const VisualBanner = () => {
                   className="absolute left-1/2 top-0 h-full w-[calc(100%-32px)] -translate-x-1/2 rounded-[20px] object-cover sm:rounded-[28px] md:rounded-[36px] xl:rounded-[54px]"
                   quality={100}
                   sizes="100vw"
+                  priority={index === 0}
                   loading={index === 0 ? 'eager' : 'lazy'}
                 />
               </div>
@@ -374,17 +375,21 @@ export const VisualBanner = () => {
         </svg>
       </button>
 
-      <div className="bg-white/18 absolute bottom-3 left-1/2 z-20 inline-flex w-fit -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-2xl border border-white/35 px-3 py-2 text-white shadow-[0_10px_28px_rgba(0,0,0,0.22)] backdrop-blur-xl backdrop-saturate-150 sm:bottom-4 sm:gap-2.5 sm:px-3.5 sm:py-2.5">
+      <div className="bg-white/18 absolute bottom-3 left-1/2 z-20 inline-flex w-fit -translate-x-1/2 items-center gap-[clamp(0.48rem,0.95vw,0.74rem)] whitespace-nowrap rounded-full border border-white/40 px-[clamp(0.82rem,1.65vw,1.16rem)] py-[clamp(0.45rem,0.85vw,0.68rem)] text-white shadow-[0_10px_28px_rgba(0,0,0,0.22)] backdrop-blur-xl backdrop-saturate-150 sm:bottom-4">
         <button
           type="button"
           aria-label={isPlaying ? 'visual banner autoplay pause' : 'visual banner autoplay play'}
           onClick={handleTogglePlay}
-          className="flex h-8 min-w-8 cursor-pointer items-center justify-center rounded-full border border-white/45 bg-black/25 transition-all duration-200 hover:-translate-y-0.5 hover:bg-black/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+          className="flex h-[clamp(1.84rem,3.05vw,2.15rem)] min-w-[clamp(1.84rem,3.05vw,2.15rem)] cursor-pointer items-center justify-center rounded-full border border-white/45 bg-black/25 transition-all duration-200 hover:-translate-y-0.5 hover:bg-black/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
         >
-          {isPlaying ? <BsPauseFill className="text-base" /> : <BsPlayFill className="text-base" />}
+          {isPlaying ? (
+            <BsPauseFill className="text-[clamp(0.88rem,1.35vw,1.02rem)]" />
+          ) : (
+            <BsPlayFill className="text-[clamp(0.88rem,1.35vw,1.02rem)]" />
+          )}
         </button>
 
-        <span className="pointer-events-none text-sm font-semibold tracking-[0.08em] text-white/95 sm:text-[15px]">
+        <span className="pointer-events-none text-[clamp(0.76rem,1.25vw,0.92rem)] font-semibold tracking-[0.08em] text-white/95">
           {currentSlideText}/{totalSlideText}
         </span>
       </div>
