@@ -15,6 +15,7 @@ interface TabMenuProps {
 
 export const TabMenu: React.FC<TabMenuProps> = ({ tabArr }: TabMenuProps) => {
   const { activeTabId, setActiveTab } = useCartlistStore()
+  const activeTab = tabArr.find((tab) => tab.id === activeTabId)
 
   useEffect(() => {
     //초기 활성화 탭 초기화
@@ -24,14 +25,14 @@ export const TabMenu: React.FC<TabMenuProps> = ({ tabArr }: TabMenuProps) => {
   return (
     <>
       <ul className="mb-4 flex flex-row gap-2 rounded-lg border-2 border-gray-200 bg-gray-200 md:mb-10">
-        {tabArr.map((item, index) => (
+        {tabArr.map((item) => (
           <li
-            key={index}
+            key={item.id}
             onClick={() => setActiveTab(item.id)}
             className={clsx(
-              'flex w-[25%] cursor-pointer justify-center rounded-md px-2 py-3 text-center transition-all duration-300 last:mr-0 md:px-5',
+              'flex w-[25%] cursor-pointer justify-center rounded-md px-2 py-3 text-center font-medium transition-colors duration-200 last:mr-0 md:px-5',
               {
-                'bg-white font-bold text-gray-700': item.id === activeTabId,
+                'bg-white text-gray-700': item.id === activeTabId,
                 'border-transparent text-gray-500': item.id !== activeTabId,
               },
             )}
@@ -46,22 +47,21 @@ export const TabMenu: React.FC<TabMenuProps> = ({ tabArr }: TabMenuProps) => {
           </li>
         ))}
       </ul>
-      <AnimatePresence mode="wait">
-        {tabArr.map(
-          (tab) =>
-            activeTabId === tab.id && (
-              <motion.div
-                key={tab.id}
-                initial={{ opacity: 0, x: -80 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 80 }}
-                transition={{ duration: 0.5, ease: [0.76, 0, 0.24, 1] }}
-              >
-                {tab.content}
-              </motion.div>
-            ),
-        )}
-      </AnimatePresence>
+      <div className="min-h-[420px]">
+        <AnimatePresence mode="wait" initial={false}>
+          {activeTab && (
+            <motion.div
+              key={activeTab.id}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+            >
+              {activeTab.content}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </>
   )
 }

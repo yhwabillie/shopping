@@ -11,6 +11,8 @@ interface PaymentInfoProps {
 }
 
 export const PaymentInfo = ({ register, checkedItemsInfo, totalQuantity, totalPrice, calculateDiscountedPrice }: PaymentInfoProps) => {
+  const finalPaymentPrice = Math.round(totalPrice >= 30000 ? totalPrice : totalPrice + 3000)
+
   return (
     <>
       <h5 className="mb-5 mt-8 block rounded-lg bg-blue-50 px-4 py-3 text-[16px] font-semibold tracking-tighter text-black md:mt-16 md:text-xl">
@@ -58,7 +60,7 @@ export const PaymentInfo = ({ register, checkedItemsInfo, totalQuantity, totalPr
 
               <li className="mt-4 flex flex-row items-center justify-between border-t border-gray-300 px-2 py-4">
                 <span className="text-sm text-red-600 md:text-[16px]">최종 결제금액</span>
-                <span className="text-[16px] font-bold tracking-tighter text-red-600 md:text-2xl">{`${(totalPrice >= 30000 ? totalPrice : totalPrice + 3000).toLocaleString('ko-KR')}원`}</span>
+                <span className="text-[16px] font-bold tracking-tighter text-red-600 md:text-2xl">{`${finalPaymentPrice.toLocaleString('ko-KR')}원`}</span>
               </li>
             </ul>
           </li>

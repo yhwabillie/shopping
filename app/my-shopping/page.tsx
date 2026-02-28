@@ -31,7 +31,7 @@ export default async function Page() {
         마이쇼핑 본문
       </h2>
       <SectionHeader title="🛍️ MY SHOPPING" desc="배송정보, 위시리스트, 장바구니, 주문 상세정보를 확인하세요" />
-      <main className="mx-4 overflow-hidden rounded-lg border-b bg-white p-4 drop-shadow-sm md:mx-0 md:p-10">
+      <main className="mx-4 overflow-hidden rounded-lg bg-white p-4 md:mx-0 md:p-10">
         <UserShoppingTabs session={session} />
       </main>
     </section>
