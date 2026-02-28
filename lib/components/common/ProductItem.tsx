@@ -5,7 +5,7 @@ import { FaHeartCirclePlus } from 'react-icons/fa6'
 import { LuHeartOff } from 'react-icons/lu'
 import { TbShoppingBagMinus, TbShoppingBagPlus } from 'react-icons/tb'
 import Image from 'next/image'
-import React from 'react'
+import React, { useState } from 'react'
 
 interface ProductItemProps {
   product: ProductType
@@ -16,6 +16,7 @@ interface ProductItemProps {
 
 export const ProductItem = React.memo(({ product, index, handleClickAddProduct, handleClickAddWish }: ProductItemProps) => {
   const isPriorityImage = index < 4
+  const [isImageLoaded, setIsImageLoaded] = useState(false)
 
   return (
     <li className="group relative box-border flex aspect-[2/3] flex-col justify-between overflow-hidden p-5">
@@ -70,11 +71,12 @@ export const ProductItem = React.memo(({ product, index, handleClickAddProduct, 
         <Image
           src={product.imageUrl}
           alt={product.name}
-          className="h-full w-full object-cover transition-all duration-300 group-hover:scale-110"
+          className={`h-full w-full object-cover transition-all duration-500 group-hover:scale-110 ${isImageLoaded ? 'opacity-100' : 'opacity-0'}`}
           priority={isPriorityImage}
           loading={isPriorityImage ? 'eager' : 'lazy'}
           quality={75}
           fetchPriority={isPriorityImage ? 'high' : 'auto'}
+          onLoad={() => setIsImageLoaded(true)}
           fill
           sizes="
           (max-width: 639px) calc((100vw - 2rem) / 2),

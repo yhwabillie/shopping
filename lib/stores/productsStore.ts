@@ -206,7 +206,7 @@ export const useProductsStore = create<ProductsStore>((set, get) => ({
         totalProducts,
         isEmpty: products.length === 0,
         currentPage: page,
-        hasMore: products.length >= pageSize,
+        hasMore: page * pageSize < totalProducts,
       })
     } catch (error) {
       console.error('Error fetching products:', error)
@@ -218,24 +218,31 @@ export const useProductsStore = create<ProductsStore>((set, get) => ({
 
   // 무한 스크롤을 위한 데이터 로드
   loadMoreData: async (page: number, pageSize: number) => {
-    const { selectedCategory, data, currentRequestId } = get()
+    const { selectedCategory } = get()
+    const requestId = get().currentRequestId + 1
 
-    set({ loading: true })
+    set({ loading: true, currentRequestId: requestId })
 
     try {
-      const { products } = await fetchProducts({ page, pageSize, category: selectedCategory })
+      const { products, totalProducts } = await fetchProducts({ page, pageSize, category: selectedCategory })
 
-      if (get().currentRequestId !== currentRequestId) return
+      if (get().currentRequestId !== requestId) return
 
-      // 중복 제거 로직 추가
-      const mergedData = [...data, ...products.filter((newProduct) => !data.some((existingProduct) => existingProduct.idx === newProduct.idx))]
+      set((state) => {
+        // 최신 state 기준으로 중복 제거 merge
+        const mergedData = [
+          ...state.data,
+          ...products.filter((newProduct) => !state.data.some((existingProduct) => existingProduct.idx === newProduct.idx)),
+        ]
 
-      set({
-        data: mergedData,
-        filteredData: mergedData,
-        currentPage: page,
-        hasMore: products.length >= pageSize,
-        isEmpty: products.length === 0,
+        return {
+          data: mergedData,
+          filteredData: mergedData,
+          totalProducts,
+          currentPage: page,
+          hasMore: mergedData.length < totalProducts,
+          isEmpty: mergedData.length === 0,
+        }
       })
     } catch (error) {
       console.error('Error fetching more products:', error)

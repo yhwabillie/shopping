@@ -1,12 +1,13 @@
 interface SkeletonProductProps {
   triggerRef?: (node?: Element | null) => void
+  className?: string
 }
 
-export const SkeletonProduct = ({ triggerRef }: SkeletonProductProps) => {
+export const SkeletonProduct = ({ triggerRef, className = '' }: SkeletonProductProps) => {
   return (
     <li
       ref={triggerRef}
-      className="relative box-border flex aspect-[2/3] h-full w-full animate-pulse flex-col justify-between overflow-hidden p-5 shadow-md shadow-gray-400"
+      className={`relative box-border flex aspect-[2/3] h-full w-full animate-pulse flex-col justify-between overflow-hidden p-5 shadow-md shadow-gray-400 transition-opacity duration-300 ease-out ${className}`}
     >
       {/* 카테고리, 제목 */}
       <div className="space-y-2">

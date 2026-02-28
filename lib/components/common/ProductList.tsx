@@ -1,6 +1,6 @@
 'use client'
 import { useProductsStore } from '@/lib/stores/productsStore'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Category } from './Category'
 import { LoadingSpinner } from './modules/LoadingSpinner'
 import { useInView } from 'react-intersection-observer'
@@ -9,7 +9,6 @@ import { ProductType } from '@/app/actions/products/actions'
 import { SkeletonProduct } from './SkeletonProduct'
 import { toast } from 'sonner'
 import { ProductItem } from './ProductItem'
-import { debounce } from '@/lib/debounce'
 
 export const ProductList = () => {
   const { status, update } = useSession()
@@ -26,21 +25,91 @@ export const ProductList = () => {
     toggleWishStatus,
     setSessionUpdate,
     hasMore,
+    currentPage,
     resetStore,
   } = useProductsStore()
 
-  const [page, setPage] = useState(1)
   const pageSize = 8
-  const skeletonCount = 3
+  const [columnCount, setColumnCount] = useState(2)
   const [hasInitialFetchCompleted, setHasInitialFetchCompleted] = useState(false)
+  const [shouldRenderSkeletons, setShouldRenderSkeletons] = useState(false)
+  const [isSkeletonVisible, setIsSkeletonVisible] = useState(false)
   const isInitialLoading = !hasInitialFetchCompleted || (loading && filteredData.length === 0)
+  const isLoadingMoreRef = useRef(false)
+  const skeletonHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const hasMorePages = hasMore
 
-  const { ref: triggerRef, inView: triggerInVeiw } = useInView({
+  const { ref: triggerRef, inView: triggerInView } = useInView({
     threshold: 0.35,
     rootMargin: '0px 0px -120px 0px',
   })
+
+  useEffect(() => {
+    const calculateColumnCount = () => {
+      if (window.matchMedia('(min-width: 1280px)').matches) {
+        setColumnCount(5)
+        return
+      }
+
+      if (window.matchMedia('(min-width: 768px)').matches) {
+        setColumnCount(4)
+        return
+      }
+
+      if (window.matchMedia('(min-width: 640px)').matches) {
+        setColumnCount(3)
+        return
+      }
+
+      setColumnCount(2)
+    }
+
+    calculateColumnCount()
+    window.addEventListener('resize', calculateColumnCount)
+
+    return () => {
+      window.removeEventListener('resize', calculateColumnCount)
+    }
+  }, [])
+
+  const skeletonCount = useMemo(() => {
+    if (!hasMorePages) return 0
+
+    const remainder = filteredData.length % columnCount
+    return remainder === 0 ? columnCount : columnCount - remainder
+  }, [hasMorePages, filteredData.length, columnCount])
+
+  useEffect(() => {
+    if (skeletonHideTimerRef.current) {
+      clearTimeout(skeletonHideTimerRef.current)
+      skeletonHideTimerRef.current = null
+    }
+
+    if (hasMorePages) {
+      setShouldRenderSkeletons(true)
+
+      const frame = requestAnimationFrame(() => {
+        setIsSkeletonVisible(true)
+      })
+
+      return () => {
+        cancelAnimationFrame(frame)
+      }
+    }
+
+    setIsSkeletonVisible(false)
+    skeletonHideTimerRef.current = setTimeout(() => {
+      setShouldRenderSkeletons(false)
+    }, 300)
+
+    return () => {
+      if (skeletonHideTimerRef.current) {
+        clearTimeout(skeletonHideTimerRef.current)
+        skeletonHideTimerRef.current = null
+      }
+    }
+  }, [hasMorePages])
 
   // 1. 세션 확인
   useEffect(() => {
@@ -69,31 +138,25 @@ export const ProductList = () => {
     }
   }, [loadInitialData, resetStore])
 
-  // 3. 무한 스크롤 Trigger (데이터 중복 로드 방지)
-  const [loadingMore, setLoadingMore] = useState(false)
+  // 3. 무한 스크롤 Trigger (중복 호출 방지 + store의 currentPage 기준)
+  const handleLoadMore = useCallback(async () => {
+    if (isLoadingMoreRef.current || loading || isEmpty || !hasMorePages) return
 
-  const handleLoadMore = useCallback(
-    debounce(async () => {
-      if (!loading && !isEmpty && hasMorePages && !loadingMore) {
-        setLoadingMore(true)
-        try {
-          await loadMoreData(page + 1, pageSize)
-          setPage((prevPage) => prevPage + 1)
-        } catch (error) {
-          toast.error('추가 데이터를 가져오는 중 오류가 발생했습니다.')
-        } finally {
-          setLoadingMore(false)
-        }
-      }
-    }, 600),
-    [loading, isEmpty, hasMorePages, loadingMore, loadMoreData, page, pageSize],
-  )
+    isLoadingMoreRef.current = true
+    try {
+      await loadMoreData(currentPage + 1, pageSize)
+    } catch (error) {
+      toast.error('추가 데이터를 가져오는 중 오류가 발생했습니다.')
+    } finally {
+      isLoadingMoreRef.current = false
+    }
+  }, [loading, isEmpty, hasMorePages, loadMoreData, currentPage, pageSize])
 
   useEffect(() => {
-    if (triggerInVeiw && page >= 1 && !loading) {
+    if (triggerInView) {
       handleLoadMore()
     }
-  }, [triggerInVeiw, handleLoadMore, page, loading])
+  }, [triggerInView, handleLoadMore])
 
   // 위시 추가 & 제거 Toggle
   const handleClickAddWish = useCallback(
@@ -143,9 +206,13 @@ export const ProductList = () => {
             ))}
 
             {/* Skeleton Products (무한 스크롤 시 추가로 로드될 때 표시) */}
-            {hasMorePages &&
+            {shouldRenderSkeletons &&
               Array.from({ length: skeletonCount }, (_, i) => (
-                <SkeletonProduct key={`skeleton-${i}`} triggerRef={i === 0 ? triggerRef : undefined} />
+                <SkeletonProduct
+                  key={`skeleton-${i}`}
+                  triggerRef={i === 0 ? triggerRef : undefined}
+                  className={isSkeletonVisible ? 'opacity-100' : 'opacity-0'}
+                />
               ))}
           </ul>
         )}
