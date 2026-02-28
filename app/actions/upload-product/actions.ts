@@ -163,10 +163,30 @@ export const deleteSelectedProductsByIdx = async (products: any) => {
 
 export const createBulkProduct = async (products: Product[]) => {
   try {
-    for (const product of products) {
-      await createProduct(product)
+    if (!products?.length) return { count: 0 }
+
+    const BATCH_SIZE = 1000
+    let insertedCount = 0
+
+    for (let i = 0; i < products.length; i += BATCH_SIZE) {
+      const batch = products.slice(i, i + BATCH_SIZE)
+
+      const { count } = await prisma.product.createMany({
+        data: batch.map((product) => ({
+          name: product.name,
+          category: product.category,
+          original_price: product.original_price,
+          discount_rate: product.discount_rate,
+          imageUrl: product.imageUrl,
+        })),
+      })
+
+      insertedCount += count
     }
+
+    return { count: insertedCount }
   } catch (error) {
-    console.log(error)
+    console.error('Failed to create bulk products:', error)
+    throw new Error('Failed to create bulk products')
   }
 }
