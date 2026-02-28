@@ -116,48 +116,41 @@ export const updateProduct = async ({ idx, name, original_price, discount_rate, 
 }
 
 export const deleteSelectedProductsByIdx = async (products: any) => {
-  // try {
-  //   // 모든 삭제 작업을 병렬로 실행
-  //   const deletePromises = Object.keys(products).map((productIdx) => {
-  //     console.log(`Deleting product with ID: ${productIdx}`)
-  //     return prisma.product.delete({
-  //       where: {
-  //         idx: productIdx,
-  //       },
-  //     })
-  //   })
-  //   await Promise.all(deletePromises)
-  //   return { success: true }
-  // } catch (error) {
-  //   console.error('Error deleting selected products:', error)
-  //   throw new Error('Failed to delete selected products')
-  // }
   try {
-    for (const product of Object.keys(products)) {
-      // 연관된 cartlist 항목 삭제
-      await prisma.cartList.deleteMany({
-        where: {
-          productIdx: product,
-        },
-      })
+    const productIds = Object.keys(products).filter((key) => products[key])
 
-      // 연관된 Wishlist 항목 삭제
-      await prisma.wishlist.deleteMany({
-        where: {
-          productIdx: product,
-        },
-      })
-
-      await prisma.product.delete({
-        where: {
-          idx: product,
-        },
-      })
+    if (!productIds.length) {
+      return { success: true, deletedCount: 0 }
     }
 
-    return { success: true }
+    const [, , deletedProducts] = await prisma.$transaction([
+      prisma.cartList.deleteMany({
+        where: {
+          productIdx: {
+            in: productIds,
+          },
+        },
+      }),
+      prisma.wishlist.deleteMany({
+        where: {
+          productIdx: {
+            in: productIds,
+          },
+        },
+      }),
+      prisma.product.deleteMany({
+        where: {
+          idx: {
+            in: productIds,
+          },
+        },
+      }),
+    ])
+
+    return { success: true, deletedCount: deletedProducts.count }
   } catch (error) {
-    console.log(error)
+    console.error('Failed to delete selected products:', error)
+    throw new Error('Failed to delete selected products')
   }
 }
 
