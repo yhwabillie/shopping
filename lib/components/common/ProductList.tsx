@@ -14,7 +14,7 @@ export const ProductList = () => {
   const { status, update } = useSession()
   const filteredData = useProductsStore((state) => state.filteredData)
   const selectedCategory = useProductsStore((state) => state.selectedCategory)
-  const loading = useProductsStore((state) => state.loading)
+  const listLoading = useProductsStore((state) => state.listLoading)
   const isEmpty = useProductsStore((state) => state.isEmpty)
   const hasMore = useProductsStore((state) => state.hasMore)
   const currentPage = useProductsStore((state) => state.currentPage)
@@ -31,17 +31,18 @@ export const ProductList = () => {
   const pageSize = 8
   const [columnCount, setColumnCount] = useState(2)
   const [hasInitialFetchCompleted, setHasInitialFetchCompleted] = useState(false)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [shouldRenderSkeletons, setShouldRenderSkeletons] = useState(false)
   const [isSkeletonVisible, setIsSkeletonVisible] = useState(false)
-  const isInitialLoading = !hasInitialFetchCompleted || (loading && filteredData.length === 0)
+  const isInitialLoading = !hasInitialFetchCompleted || (listLoading && filteredData.length === 0)
   const isLoadingMoreRef = useRef(false)
   const skeletonHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const hasMorePages = hasMore
 
   const { ref: triggerRef, inView: triggerInView } = useInView({
-    threshold: 0.35,
-    rootMargin: '0px 0px -120px 0px',
+    threshold: 0,
+    rootMargin: '0px 0px 240px 0px',
   })
 
   useEffect(() => {
@@ -85,7 +86,7 @@ export const ProductList = () => {
       skeletonHideTimerRef.current = null
     }
 
-    if (hasMorePages) {
+    if (isLoadingMore) {
       setShouldRenderSkeletons(true)
 
       const frame = requestAnimationFrame(() => {
@@ -108,7 +109,7 @@ export const ProductList = () => {
         skeletonHideTimerRef.current = null
       }
     }
-  }, [hasMorePages])
+  }, [isLoadingMore])
 
   // 1. 세션 확인
   useEffect(() => {
@@ -139,17 +140,19 @@ export const ProductList = () => {
 
   // 3. 무한 스크롤 Trigger (중복 호출 방지 + store의 currentPage 기준)
   const handleLoadMore = useCallback(async () => {
-    if (isLoadingMoreRef.current || loading || isEmpty || !hasMorePages) return
+    if (isLoadingMoreRef.current || listLoading || isEmpty || !hasMorePages) return
 
     isLoadingMoreRef.current = true
+    setIsLoadingMore(true)
     try {
       await loadMoreData(currentPage + 1, pageSize)
     } catch (error) {
       toast.error('추가 데이터를 가져오는 중 오류가 발생했습니다.')
     } finally {
+      setIsLoadingMore(false)
       isLoadingMoreRef.current = false
     }
-  }, [loading, isEmpty, hasMorePages, loadMoreData, currentPage, pageSize])
+  }, [listLoading, isEmpty, hasMorePages, loadMoreData, currentPage, pageSize])
 
   useEffect(() => {
     if (triggerInView) {
@@ -205,18 +208,17 @@ export const ProductList = () => {
             ))}
 
             {/* Skeleton Products (무한 스크롤 시 추가로 로드될 때 표시) */}
-            {shouldRenderSkeletons &&
+            {hasMorePages &&
+              shouldRenderSkeletons &&
               Array.from({ length: skeletonCount }, (_, i) => (
-                <SkeletonProduct
-                  key={`skeleton-${i}`}
-                  triggerRef={i === 0 ? triggerRef : undefined}
-                  className={isSkeletonVisible ? 'opacity-100' : 'opacity-0'}
-                />
+                <SkeletonProduct key={`skeleton-${i}`} className={isSkeletonVisible ? 'opacity-100' : 'opacity-0'} />
               ))}
           </ul>
         )}
 
-        {!isInitialLoading && hasMorePages && (
+        {!isInitialLoading && hasMorePages && <div ref={triggerRef} className="h-12 w-full" aria-hidden />}
+
+        {isLoadingMore && (
           <div className="flex h-48 w-full items-center justify-center">
             <LoadingSpinner />
           </div>

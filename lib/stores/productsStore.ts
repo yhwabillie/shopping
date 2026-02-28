@@ -35,10 +35,12 @@ interface ProductsStore {
   totalProducts: number
   currentPage: number
   hasMore: boolean
-  loading: boolean
+  listLoading: boolean
+  autoCompleteLoading: boolean
+  toggleLoading: boolean
   currentRequestId: number
   setCategoryFilter: (category: string) => void
-  fetchData: (page: number, pageSize: number) => Promise<void>
+  fetchData: (page: number, pageSize: number, categoryOverride?: string) => Promise<void>
   allData: ProductType[]
   fetchAllData: () => Promise<
     | {
@@ -88,7 +90,7 @@ export const useProductsStore = create<ProductsStore>((set, get) => ({
 
   allData: [],
   fetchAllData: async () => {
-    set({ loading: true })
+    set({ autoCompleteLoading: true })
 
     try {
       //products -> DB에서 위시리스트와 장바구니를 뒤져서 현재 데이터에 같은 값이 있으면 isInwish, isInCart boolean 값으로 표시한 데이터
@@ -108,7 +110,7 @@ export const useProductsStore = create<ProductsStore>((set, get) => ({
       console.error('Error fetching products:', error)
       toast.error('상품 데이터를 가져오는 중 오류가 발생했습니다.')
     } finally {
-      set({ loading: false })
+      set({ autoCompleteLoading: false })
     }
   },
 
@@ -120,7 +122,7 @@ export const useProductsStore = create<ProductsStore>((set, get) => ({
     }
 
     const { fetchAllData } = get()
-    set({ loading: true })
+    set({ autoCompleteLoading: true })
 
     const allData = await fetchAllData()
 
@@ -140,7 +142,7 @@ export const useProductsStore = create<ProductsStore>((set, get) => ({
       console.error('Error fetching suggestions:', error)
       toast.error('자동완성 데이터를 가져오는 중 오류가 발생했습니다.')
     } finally {
-      set({ loading: false })
+      set({ autoCompleteLoading: false })
     }
   }, 300),
 
@@ -176,22 +178,39 @@ export const useProductsStore = create<ProductsStore>((set, get) => ({
   totalProducts: 0,
   currentPage: 1,
   hasMore: true,
-  loading: false,
+  listLoading: false,
+  autoCompleteLoading: false,
+  toggleLoading: false,
   currentRequestId: 0,
 
   cartlistLength: 0,
 
   // 카테고리 필터링
   setCategoryFilter: async (category: string) => {
-    const { fetchData } = get()
-    set({ selectedCategory: category, currentPage: 1, hasMore: true, isEmpty: false })
-    await fetchData(1, 8)
-  },
-  fetchData: async (page: number, pageSize: number): Promise<void> => {
-    const requestId = get().currentRequestId + 1
-    set({ loading: true, currentRequestId: requestId })
+    const { fetchData, selectedCategory, data, currentRequestId } = get()
 
-    const category = get().selectedCategory
+    // 같은 카테고리 재요청은 막되, '전체'는 항상 최신 목록 재조회 허용
+    if (selectedCategory === category && category !== '전체' && data.length > 0) return
+
+    // 이전 in-flight 요청 무효화 + 전환 중 추가 로드 차단
+    const nextRequestId = currentRequestId + 1
+
+    // 필터 전환 시 이전 리스트/트리거 영향 제거
+    set({
+      currentRequestId: nextRequestId,
+      listLoading: true,
+      selectedCategory: category,
+      currentPage: 1,
+      hasMore: false,
+      isEmpty: false,
+    })
+    await fetchData(1, 8, category)
+  },
+  fetchData: async (page: number, pageSize: number, categoryOverride?: string): Promise<void> => {
+    const requestId = get().currentRequestId + 1
+    set({ listLoading: true, currentRequestId: requestId })
+
+    const category = categoryOverride ?? get().selectedCategory
 
     try {
       //products -> DB에서 위시리스트와 장바구니를 뒤져서 현재 데이터에 같은 값이 있으면 isInwish, isInCart boolean 값으로 표시한 데이터
@@ -203,6 +222,7 @@ export const useProductsStore = create<ProductsStore>((set, get) => ({
         data: products, //전체 데이터
         filteredData: products,
         category: Array.from(new Set(products.map((product) => product.category))),
+        selectedCategory: category,
         totalProducts,
         isEmpty: products.length === 0,
         currentPage: page,
@@ -212,7 +232,7 @@ export const useProductsStore = create<ProductsStore>((set, get) => ({
       console.error('Error fetching products:', error)
       toast.error('상품 데이터를 가져오는 중 오류가 발생했습니다.')
     } finally {
-      set({ loading: false })
+      set({ listLoading: false })
     }
   },
 
@@ -221,7 +241,7 @@ export const useProductsStore = create<ProductsStore>((set, get) => ({
     const { selectedCategory } = get()
     const requestId = get().currentRequestId + 1
 
-    set({ loading: true, currentRequestId: requestId })
+    set({ listLoading: true, currentRequestId: requestId })
 
     try {
       const { products, totalProducts } = await fetchProducts({ page, pageSize, category: selectedCategory })
@@ -248,7 +268,7 @@ export const useProductsStore = create<ProductsStore>((set, get) => ({
       console.error('Error fetching more products:', error)
       toast.error('추가 데이터를 가져오는 중 오류가 발생했습니다.')
     } finally {
-      set({ loading: false })
+      set({ listLoading: false })
     }
   },
 
@@ -261,12 +281,14 @@ export const useProductsStore = create<ProductsStore>((set, get) => ({
       selectedCategory: '전체',
       currentPage: 1,
       hasMore: true,
-      loading: false,
+      listLoading: false,
+      autoCompleteLoading: false,
+      toggleLoading: false,
     }),
 
   //toggle wish, cart
   toggleWishStatus: async (productIdx: string) => {
-    set({ loading: true })
+    set({ toggleLoading: true })
 
     try {
       const response = await toggleWishStatus(productIdx)
@@ -290,13 +312,13 @@ export const useProductsStore = create<ProductsStore>((set, get) => ({
         toast.error('예기치 않은 오류가 발생했습니다.')
       }
     } finally {
-      set({ loading: false })
+      set({ toggleLoading: false })
     }
   },
 
   toggleCartStatus: async (productIdx: string) => {
     const { sessionUpdate } = get()
-    set({ loading: true })
+    set({ toggleLoading: true })
 
     try {
       const response = await toggleProductToCart(productIdx)
@@ -325,7 +347,7 @@ export const useProductsStore = create<ProductsStore>((set, get) => ({
         toast.error('예기치 않은 오류가 발생했습니다.')
       }
     } finally {
-      set({ loading: false })
+      set({ toggleLoading: false })
     }
   },
 

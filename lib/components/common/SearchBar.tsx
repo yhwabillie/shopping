@@ -17,7 +17,7 @@ export const SearchBar = ({ isScrolled }: SearchBarProps) => {
   const [isFocus, setIsFocus] = useState(false)
   const [inputValue, setInputValue] = useState('') // 검색어를 상태로 관리
   const [activeIndex, setActiveIndex] = useState(-2) // 활성화된 아이템의 인덱스 (-1은 기본값으로 검색창에 있는 값을 의미)
-  const { setSearchQuery, selectSearchResult, autoCompleteSuggestions, loading, setAutoCompleteSuggestions } = useProductsStore()
+  const { setSearchQuery, selectSearchResult, autoCompleteSuggestions, autoCompleteLoading, setAutoCompleteSuggestions } = useProductsStore()
 
   const searchBarRef = useRef<HTMLFieldSetElement>(null)
   const originalInputValue = useRef(inputValue) // 사용자가 입력한 원래 검색어를 저장
@@ -41,7 +41,7 @@ export const SearchBar = ({ isScrolled }: SearchBarProps) => {
   }
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (!isFocus || loading) return
+    if (!isFocus || autoCompleteLoading) return
 
     switch (event.key) {
       case 'ArrowDown':
@@ -151,17 +151,17 @@ export const SearchBar = ({ isScrolled }: SearchBarProps) => {
           <div className="absolute left-0 top-[38px] flex w-full flex-col justify-between rounded-2xl bg-[#212325] py-4 text-sm shadow-md">
             <div
               className={clsx('flex items-center justify-center', {
-                'h-auto': autoCompleteSuggestions.length > 0 && !loading,
-                'min-h-[138px]': !(autoCompleteSuggestions.length > 0 && !loading),
+                'h-auto': autoCompleteSuggestions.length > 0 && !autoCompleteLoading,
+                'min-h-[138px]': !(autoCompleteSuggestions.length > 0 && !autoCompleteLoading),
               })}
             >
-              {loading && (
+              {autoCompleteLoading && (
                 <div className="mx-auto w-fit pb-10">
                   <LoadingSpinner />
                 </div>
               )}
               {/* 자동완성 결과 */}
-              {autoCompleteSuggestions.length > 0 && !loading && (
+              {autoCompleteSuggestions.length > 0 && !autoCompleteLoading && (
                 <ul className="flex w-full flex-col self-start">
                   {autoCompleteSuggestions.map((suggestion, index) => (
                     <li
@@ -181,7 +181,7 @@ export const SearchBar = ({ isScrolled }: SearchBarProps) => {
                 </ul>
               )}
 
-              {autoCompleteSuggestions.length === 0 && !loading && (
+              {autoCompleteSuggestions.length === 0 && !autoCompleteLoading && (
                 <p className="p-2 text-center text-sm text-[#9da5b6]">제품 이름 혹은 카테고리를 검색하세요</p>
               )}
             </div>
