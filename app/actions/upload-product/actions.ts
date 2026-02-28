@@ -12,6 +12,14 @@ export interface Product {
   updatedAt: Date
 }
 
+export interface CreateProductInput {
+  name: string
+  category: string
+  original_price: number
+  discount_rate: number
+  imageUrl: string
+}
+
 export interface UpdateProduct {
   idx: string
   name: string
@@ -19,6 +27,9 @@ export interface UpdateProduct {
   discount_rate: number
   imageUrl: string
 }
+
+type AdminSortField = 'category' | 'original_price' | 'discount_rate' | 'sale_price' | null
+type AdminSortOrder = 'asc' | 'desc'
 
 /** admin 상품 데이터 업로드
  * - 상품 데이터 fetch
@@ -31,17 +42,52 @@ export const fetchProducts = async (
   page: number,
   limit: number,
   category: string | null,
+  sortField: AdminSortField = null,
+  sortOrder: AdminSortOrder = 'asc',
 ): Promise<{ products: Product[]; totalProducts: number }> => {
   try {
     const skip = (page - 1) * limit
     const where = category ? { category } : {}
+
+    if (sortField === 'sale_price') {
+      const allProducts = await prisma.product.findMany({
+        where,
+      })
+
+      const sortedProducts = allProducts.sort((a, b) => {
+        const salePriceA = a.original_price - a.original_price * (a.discount_rate ?? 0)
+        const salePriceB = b.original_price - b.original_price * (b.discount_rate ?? 0)
+        return sortOrder === 'asc' ? salePriceA - salePriceB : salePriceB - salePriceA
+      })
+
+      return {
+        products: sortedProducts.slice(skip, skip + limit),
+        totalProducts: sortedProducts.length,
+      }
+    }
+
+    const orderBy = (() => {
+      if (sortField === 'category') {
+        return [{ category: sortOrder }, { createdAt: 'desc' as const }, { idx: 'desc' as const }]
+      }
+
+      if (sortField === 'original_price') {
+        return [{ original_price: sortOrder }, { createdAt: 'desc' as const }, { idx: 'desc' as const }]
+      }
+
+      if (sortField === 'discount_rate') {
+        return [{ discount_rate: sortOrder }, { createdAt: 'desc' as const }, { idx: 'desc' as const }]
+      }
+
+      return [{ createdAt: 'desc' as const }, { idx: 'desc' as const }]
+    })()
 
     const [products, totalProducts] = await Promise.all([
       prisma.product.findMany({
         skip,
         take: limit,
         where,
-        orderBy: [{ createdAt: 'desc' }, { idx: 'desc' }],
+        orderBy,
       }),
       prisma.product.count({
         where,
@@ -155,7 +201,53 @@ export const deleteSelectedProductsByIdx = async (products: any) => {
   }
 }
 
-export const createBulkProduct = async (products: Product[]) => {
+export const deleteAllProducts = async (category: string | null) => {
+  try {
+    const where = category ? { category } : undefined
+
+    const targetProducts = await prisma.product.findMany({
+      where,
+      select: { idx: true },
+    })
+
+    const productIds = targetProducts.map((item) => item.idx)
+
+    if (!productIds.length) {
+      return { success: true, deletedCount: 0 }
+    }
+
+    const [, , deletedProducts] = await prisma.$transaction([
+      prisma.cartList.deleteMany({
+        where: {
+          productIdx: {
+            in: productIds,
+          },
+        },
+      }),
+      prisma.wishlist.deleteMany({
+        where: {
+          productIdx: {
+            in: productIds,
+          },
+        },
+      }),
+      prisma.product.deleteMany({
+        where: {
+          idx: {
+            in: productIds,
+          },
+        },
+      }),
+    ])
+
+    return { success: true, deletedCount: deletedProducts.count }
+  } catch (error) {
+    console.error('Failed to delete all products:', error)
+    throw new Error('Failed to delete all products')
+  }
+}
+
+export const createBulkProduct = async (products: CreateProductInput[]) => {
   try {
     if (!products?.length) return { count: 0 }
 

@@ -1,5 +1,5 @@
 'use client'
-import { createBulkProduct, Product } from '@/app/actions/upload-product/actions'
+import { createBulkProduct } from '@/app/actions/upload-product/actions'
 import { useState } from 'react'
 import { Button } from '@/lib/components/common/modules/Button'
 import { FieldValues, useForm } from 'react-hook-form'
@@ -26,7 +26,15 @@ export const ProductUploadForm = () => {
 
       const sheetName = workbook.SheetNames[0]
       const workSheet = workbook.Sheets[sheetName]
-      const json = XLSX.utils.sheet_to_json<Product>(workSheet)
+      const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(workSheet)
+
+      const json = rows.map((row) => ({
+        name: String(row.name ?? ''),
+        category: String(row.category ?? ''),
+        original_price: Number(row.original_price ?? 0),
+        discount_rate: Number(row.discount_rate ?? 0),
+        imageUrl: String(row.imageUrl ?? ''),
+      }))
 
       await createBulkProduct(json)
       setProductState(true)

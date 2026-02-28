@@ -187,13 +187,17 @@ export const ProductList = () => {
   return (
     <div className="relative z-10 mx-auto mt-4 box-border min-w-[calc(360px-20px)] rounded-t-[2rem] bg-white pb-4 pt-4 drop-shadow-2xl md:static md:z-0 md:mt-0 md:w-auto md:bg-transparent">
       {/* 카테고리 필터 */}
-      <Category setCategoryFilter={setCategoryFilter} selectedCategory={selectedCategory} />
+      {!isInitialLoading && filteredData.length > 0 && <Category setCategoryFilter={setCategoryFilter} selectedCategory={selectedCategory} />}
 
       {/* 상품 리스트 */}
       <section className="container box-border w-full bg-white sm:mx-auto md:mt-4 md:bg-transparent">
         {isInitialLoading ? (
           <div className="flex h-48 w-full items-center justify-center">
             <LoadingSpinner />
+          </div>
+        ) : filteredData.length === 0 ? (
+          <div className="mx-4 my-4 flex min-h-[220px] items-center justify-center rounded-md border border-slate-200 bg-slate-50 text-sm font-medium text-slate-500 md:mx-0">
+            상품 데이터가 없습니다.
           </div>
         ) : (
           <ul className="mx-4 my-4 box-border grid grid-cols-2 sm:grid-cols-3 md:m-0 md:grid-cols-4 xl:grid-cols-5">

@@ -1,8 +1,15 @@
 'use client'
 import { ChangeEvent, useEffect, useRef, useState } from 'react'
 import { Button } from '@/lib/components/common/modules/Button'
-import { FaAngleDoubleLeft, FaAngleDoubleRight, FaAngleLeft, FaAngleRight, FaCheck } from 'react-icons/fa'
-import { deleteSelectedProductsByIdx, fetchCategories, fetchProducts, UpdateProduct, updateProduct } from '@/app/actions/upload-product/actions'
+import { FaAngleDoubleLeft, FaAngleDoubleRight, FaAngleLeft, FaAngleRight, FaCheck, FaFileExcel, FaTrash, FaTrashAlt } from 'react-icons/fa'
+import {
+  deleteAllProducts,
+  deleteSelectedProductsByIdx,
+  fetchCategories,
+  fetchProducts,
+  UpdateProduct,
+  updateProduct,
+} from '@/app/actions/upload-product/actions'
 import { useProductStore } from '@/lib/zustandStore'
 import { toast } from 'sonner'
 import { LoadingSpinner } from '@/lib/components/common/modules/LoadingSpinner'
@@ -10,21 +17,57 @@ import { Product } from '@prisma/client'
 import * as XLSX from 'xlsx'
 import { ProductItemModal } from '@/lib/components/admin/ProductItemModal'
 import { IoMdArrowDropdown } from 'react-icons/io'
+import { BtnLoadingSpinner } from '@/lib/components/common/modules/BtnLoadingSpinner'
 
 interface CheckedItem {
   [key: string]: boolean
 }
 
+type SortField = 'category' | 'original_price' | 'discount_rate' | 'sale_price' | null
+type SortOrder = 'asc' | 'desc'
+const PAGE_LIMIT_OPTIONS = [10, 20, 30] as const
+
+const SortToggleIcon = ({ active, order }: { active: boolean; order: SortOrder }) => {
+  if (!active) {
+    return (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="text-slate-400">
+        <path d="M8 7l4-4 4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M8 17l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    )
+  }
+
+  if (order === 'asc') {
+    return (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="text-blue-700">
+        <path d="M8 14l4-4 4 4" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    )
+  }
+
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true" className="text-blue-700">
+      <path d="M8 10l4 4 4-4" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
 export const ProductList = () => {
   const [loading, setLoading] = useState(true)
   const [deleteLoading, setDeleteLoading] = useState(false)
+  const [deleteAllLoading, setDeleteAllLoading] = useState(false)
+  const [isDeleteSelectedConfirmOpen, setIsDeleteSelectedConfirmOpen] = useState(false)
+  const [isDeleteAllConfirmOpen, setIsDeleteAllConfirmOpen] = useState(false)
 
-  const pageLimit = 10
+  const [pageLimit, setPageLimit] = useState<number>(10)
   const [totalPages, setTotalPages] = useState(0)
+  const [totalProductsCount, setTotalProductsCount] = useState(0)
   const [currentPage, setCurrentPage] = useState(1)
 
   const [categories, setCategories] = useState<string[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [sortField, setSortField] = useState<SortField>(null)
+  const [sortOrder, setSortOrder] = useState<SortOrder>('asc')
 
   const [data, setData] = useState<Product[]>([])
   const [checkedItems, setCheckedItems] = useState<CheckedItem>({})
@@ -35,6 +78,12 @@ export const ProductList = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+
+  const hasProducts = totalProductsCount > 0
+  const canUseCategoryFilter = !loading && hasProducts && categories.length > 0
+  const selectedProductsInCurrentPage = data.filter((item) => checkedItems[item.idx])
+  const selectedCount = selectedProductsInCurrentPage.length
+  const selectedProductTitles = selectedProductsInCurrentPage.map((item) => item.name)
 
   // 현재 페이지가 바뀔 때 체크박스 상태를 리셋
   useEffect(() => {
@@ -78,6 +127,10 @@ export const ProductList = () => {
    * 선택된 item을 삭제하고 상태를 업데이트하는 event handler 함수
    */
   const handleDeleteSelected = async () => {
+    if (selectedCount === 0) {
+      return
+    }
+
     console.log('서버로 저장되는 데이터===>', checkedItems)
 
     //item이 체크되면 true값을 할당, 값이 true인 것을 필터링
@@ -119,7 +172,27 @@ export const ProductList = () => {
       console.error('Failed to delete selected products:', error)
       toast.error('선택한 제품을 삭제하는 데 실패했습니다. 다시 시도해주세요.')
     } finally {
+      setIsDeleteSelectedConfirmOpen(false)
       setDeleteLoading(false) // 로딩 상태 해제
+    }
+  }
+
+  const handleDeleteAll = async () => {
+    try {
+      setDeleteAllLoading(true)
+      await deleteAllProducts(selectedCategory)
+
+      setCheckedItems({})
+      setIsAllChecked(false)
+
+      setLoading(true)
+      await fetchData(1, selectedCategory)
+      setCurrentPage(1)
+    } catch (error) {
+      console.error('Failed to delete all products:', error)
+      toast.error('전체 삭제에 실패했습니다. 다시 시도해주세요.')
+    } finally {
+      setDeleteAllLoading(false)
     }
   }
 
@@ -183,6 +256,14 @@ export const ProductList = () => {
     setCheckedItems(updatedItems)
   }
 
+  const handleSortToggle = (field: Exclude<SortField, null>) => {
+    const nextOrder: SortOrder = sortField === field ? (sortOrder === 'asc' ? 'desc' : 'asc') : 'asc'
+    setSortField(field)
+    setSortOrder(nextOrder)
+    setLoading(true)
+    setCurrentPage(1)
+  }
+
   /**
    * products DB 데이터 GET
    * @param {number} page - 현재 페이지
@@ -190,9 +271,10 @@ export const ProductList = () => {
    */
   const fetchData = async (page: number, category: string | null) => {
     try {
-      const { products, totalProducts } = await fetchProducts(page, pageLimit, category)
+      const { products, totalProducts } = await fetchProducts(page, pageLimit, category, sortField, sortOrder)
       setData(products)
       setTotalPages(Math.ceil(totalProducts / pageLimit))
+      setTotalProductsCount(totalProducts)
       setCurrentPage(page)
     } catch (error: any) {
       console.error('Failed to fetch products:', error) // 디버그용
@@ -208,6 +290,18 @@ export const ProductList = () => {
    */
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
+  }
+
+  const handlePageLimitChange = (limit: number) => {
+    if (pageLimit === limit) {
+      return
+    }
+
+    setPageLimit(limit)
+    setCurrentPage(1)
+    setCheckedItems({})
+    setIsAllChecked(false)
+    setLoading(true)
   }
 
   /**
@@ -408,7 +502,7 @@ export const ProductList = () => {
 
     //엑셀 데이터에서 DB 업로드 분기 - 리셋
     setProductState(false)
-  }, [productState, currentPage, selectedCategory])
+  }, [productState, currentPage, selectedCategory, sortField, sortOrder, pageLimit])
 
   useEffect(() => {
     // fetch data와 checkedItems의 개수가 같으면 모두 체크
@@ -420,28 +514,92 @@ export const ProductList = () => {
       <h4 id="product-list-heading" className="sr-only">
         업로드된 상품 리스트
       </h4>
-      <div className="mb-10 flex flex-row justify-end gap-2 lg:mb-5">
-        <div className="w-[230px]">
-          <Button label="전체 Excel 다운로드" clickEvent={handleDownload} disalbe={!(data.length > 0)} />
+      <div className="mb-6 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+        <div className="relative w-fit shadow-sm">
+          <select
+            onChange={handleCategoryChange}
+            value={selectedCategory || ''}
+            disabled={!canUseCategoryFilter}
+            className="w-[200px] rounded-md border border-blue-500/50 px-3 py-2 font-medium text-blue-500 focus:outline-0"
+          >
+            <option value="">전체</option>
+            {categories.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
+          </select>
+          <IoMdArrowDropdown className="absolute right-[5px] top-[50%] z-10 translate-y-[-50%] text-2xl text-blue-500" />
         </div>
-        <div className="w-[150px]">
-          <Button label="선택 삭제" clickEvent={handleDeleteSelected} spinner={deleteLoading} disalbe={deleteLoading || !(data.length > 0)} />
+
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1 rounded-md border border-slate-200 bg-white p-1 shadow-sm">
+            {PAGE_LIMIT_OPTIONS.map((limit) => (
+              <button
+                key={limit}
+                type="button"
+                onClick={() => handlePageLimitChange(limit)}
+                className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-colors md:text-sm ${
+                  pageLimit === limit ? 'bg-blue-500 text-white' : 'text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                {limit}개 보기
+              </button>
+            ))}
+          </div>
+
+          <p className="w-fit rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 shadow-sm">
+            {selectedCategory ? `${selectedCategory}` : '전체'} 총 {totalProductsCount.toLocaleString('ko-KR')}개
+          </p>
         </div>
       </div>
-      <div className="relative w-fit shadow-sm">
-        <select
-          onChange={handleCategoryChange}
-          value={selectedCategory || ''}
-          className="w-[200px] rounded-md border border-blue-500/50 px-3 py-2 font-medium text-blue-500 focus:outline-0"
-        >
-          <option value="">전체</option>
-          {categories.map((category) => (
-            <option key={category} value={category}>
-              {category}
-            </option>
-          ))}
-        </select>
-        <IoMdArrowDropdown className="absolute right-[5px] top-[50%] z-10 translate-y-[-50%] text-2xl text-blue-500" />
+
+      <div className="mb-10 flex flex-row justify-end gap-2 lg:mb-5">
+        <div className="w-[230px]">
+          <button
+            type="button"
+            onClick={handleDownload}
+            disabled={!hasProducts}
+            className="leading-1 flex h-[50px] w-full min-w-full cursor-pointer items-center justify-center gap-2 rounded-md bg-emerald-500 py-3 text-sm text-white shadow-lg transition-all duration-150 ease-in-out hover:bg-emerald-600 disabled:cursor-not-allowed disabled:bg-gray-400 md:text-[16px]"
+          >
+            <FaFileExcel className="text-base" />
+            <span>전체 Excel 다운로드</span>
+          </button>
+        </div>
+        <div className="w-[150px]">
+          <button
+            type="button"
+            onClick={() => setIsDeleteSelectedConfirmOpen(true)}
+            disabled={deleteLoading || deleteAllLoading || selectedCount === 0}
+            className="leading-1 flex h-[50px] w-full min-w-full cursor-pointer items-center justify-center gap-2 rounded-md bg-amber-500 py-3 text-sm text-white shadow-lg transition-all duration-150 ease-in-out hover:bg-amber-600 disabled:cursor-not-allowed disabled:bg-gray-400 md:text-[16px]"
+          >
+            {deleteLoading ? (
+              <BtnLoadingSpinner />
+            ) : (
+              <>
+                <FaTrash className="text-base" />
+                <span>선택 삭제</span>
+              </>
+            )}
+          </button>
+        </div>
+        <div className="w-[150px]">
+          <button
+            type="button"
+            onClick={() => setIsDeleteAllConfirmOpen(true)}
+            disabled={deleteAllLoading || deleteLoading || !hasProducts}
+            className="leading-1 flex h-[50px] w-full min-w-full cursor-pointer items-center justify-center gap-2 rounded-md bg-rose-500 py-3 text-sm text-white shadow-lg transition-all duration-150 ease-in-out hover:bg-rose-600 disabled:cursor-not-allowed disabled:bg-gray-400 md:text-[16px]"
+          >
+            {deleteAllLoading ? (
+              <BtnLoadingSpinner />
+            ) : (
+              <>
+                <FaTrashAlt className="text-base" />
+                <span>전체 삭제</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -478,48 +636,176 @@ export const ProductList = () => {
                   </label>
                 </th>
                 <th className="w-[50%] text-center text-sm">이름</th>
-                <th className="w-[10%] text-center text-sm">카테고리</th>
-                <th className="w-[10%] text-center text-sm">정가</th>
-                <th className="w-[10%] text-center text-sm">할인</th>
-                <th className="w-[15%] text-center text-sm">판매가</th>
+                <th className="w-[10%] text-center text-sm">
+                  <div className="flex items-center justify-center gap-1">
+                    <span>카테고리</span>
+                    <button
+                      type="button"
+                      onClick={() => handleSortToggle('category')}
+                      className="rounded p-0.5 text-blue-600 transition-colors hover:bg-blue-50 hover:text-blue-800"
+                      aria-label="카테고리 정렬 토글"
+                    >
+                      <SortToggleIcon active={sortField === 'category'} order={sortOrder} />
+                    </button>
+                  </div>
+                </th>
+                <th className="w-[10%] text-center text-sm">
+                  <div className="flex items-center justify-center gap-1">
+                    <span>정가</span>
+                    <button
+                      type="button"
+                      onClick={() => handleSortToggle('original_price')}
+                      className="rounded p-0.5 text-blue-600 transition-colors hover:bg-blue-50 hover:text-blue-800"
+                      aria-label="정가 정렬 토글"
+                    >
+                      <SortToggleIcon active={sortField === 'original_price'} order={sortOrder} />
+                    </button>
+                  </div>
+                </th>
+                <th className="w-[10%] text-center text-sm">
+                  <div className="flex items-center justify-center gap-1">
+                    <span>할인</span>
+                    <button
+                      type="button"
+                      onClick={() => handleSortToggle('discount_rate')}
+                      className="rounded p-0.5 text-blue-600 transition-colors hover:bg-blue-50 hover:text-blue-800"
+                      aria-label="할인 정렬 토글"
+                    >
+                      <SortToggleIcon active={sortField === 'discount_rate'} order={sortOrder} />
+                    </button>
+                  </div>
+                </th>
+                <th className="w-[15%] text-center text-sm">
+                  <div className="flex items-center justify-center gap-1">
+                    <span>판매가</span>
+                    <button
+                      type="button"
+                      onClick={() => handleSortToggle('sale_price')}
+                      className="rounded p-0.5 text-blue-600 transition-colors hover:bg-blue-50 hover:text-blue-800"
+                      aria-label="판매가 정렬 토글"
+                    >
+                      <SortToggleIcon active={sortField === 'sale_price'} order={sortOrder} />
+                    </button>
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white">
-              {data.map((item: Product, index: any) => (
-                <tr key={index} className="border-b border-gray-200 hover:bg-gray-50">
-                  <td className="w-[5%]">
-                    <label htmlFor={item.idx} className="mx-auto flex h-4 w-4 cursor-pointer items-center justify-center border border-gray-500/50">
-                      <input
-                        checked={!!checkedItems[`${item.idx}`]}
-                        onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                          const isChecked = event.target.checked
+              {data.length > 0 ? (
+                data.map((item: Product, index: any) => (
+                  <tr key={index} className="border-b border-gray-200 hover:bg-gray-50">
+                    <td className="w-[5%]">
+                      <label htmlFor={item.idx} className="mx-auto flex h-4 w-4 cursor-pointer items-center justify-center border border-gray-500/50">
+                        <input
+                          checked={!!checkedItems[`${item.idx}`]}
+                          onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                            const isChecked = event.target.checked
 
-                          toggleCheckedItem(`${item.idx}`, isChecked)
-                        }}
-                        type="checkbox"
-                        id={item.idx}
-                      />
-                      {checkedItems[`${item.idx}`] && <FaCheck className="cursor-pointer text-blue-600" />}
-                    </label>
-                  </td>
-                  <td onClick={() => handleProductClick(item)} className="box-border w-[50%] break-all p-2 text-left text-sm">
-                    {item.name}
-                  </td>
-                  <td className="box-border w-[15%] text-center text-sm">{item.category}</td>
-                  <td className="box-border w-[10%] text-center text-sm">{item.original_price.toLocaleString('ko-KR')}</td>
-                  <td className="box-border w-[10%] text-center text-sm">{`${item.discount_rate! * 100}%`}</td>
-                  <td className="box-border w-[10%] pr-2 text-right text-sm">
-                    {`${(item.original_price - item.original_price * item.discount_rate!).toLocaleString('ko-KR')}`}
+                            toggleCheckedItem(`${item.idx}`, isChecked)
+                          }}
+                          type="checkbox"
+                          id={item.idx}
+                        />
+                        {checkedItems[`${item.idx}`] && <FaCheck className="cursor-pointer text-blue-600" />}
+                      </label>
+                    </td>
+                    <td onClick={() => handleProductClick(item)} className="box-border w-[50%] break-all p-2 text-left text-sm">
+                      {item.name}
+                    </td>
+                    <td className="box-border w-[15%] text-center text-sm">{item.category}</td>
+                    <td className="box-border w-[10%] text-center text-sm">{item.original_price.toLocaleString('ko-KR')}</td>
+                    <td className="box-border w-[10%] text-center text-sm">{`${item.discount_rate! * 100}%`}</td>
+                    <td className="box-border w-[10%] pr-2 text-right text-sm">
+                      {`${(item.original_price - item.original_price * item.discount_rate!).toLocaleString('ko-KR')}`}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={6} className="py-16 text-center text-sm font-medium text-gray-500">
+                    데이터가 없습니다.
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
-          <div className="flex flex-row items-center justify-center gap-2 py-10">{renderPaginationButtons()}</div>
+          {data.length > 0 && <div className="flex flex-row items-center justify-center gap-2 py-10">{renderPaginationButtons()}</div>}
         </>
       )}
 
       {selectedProduct && <ProductItemModal isOpen={isModalOpen} onClose={closeModal} product={selectedProduct} onSave={saveProduct} />}
+
+      {isDeleteSelectedConfirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-2xl">
+            <h5 className="text-lg font-semibold text-gray-900">선택 삭제 확인</h5>
+            <p className="mt-2 text-sm text-gray-600">선택한 {selectedCount.toLocaleString('ko-KR')}개의 상품을 삭제할까요?</p>
+
+            <div className="mt-3 max-h-40 overflow-y-auto rounded-md border border-gray-200 bg-gray-50 p-3">
+              <p className="mb-2 text-xs font-semibold text-gray-500">삭제 대상 상품명</p>
+              <ul className="space-y-1">
+                {selectedProductTitles.map((title, index) => (
+                  <li key={`${title}-${index}`} className="truncate text-sm text-gray-700">
+                    • {title}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <p className="mt-2 text-xs text-rose-600">삭제 후 복구할 수 없습니다.</p>
+
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setIsDeleteSelectedConfirmOpen(false)}
+                className="rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteSelected}
+                disabled={deleteLoading}
+                className="rounded-md bg-amber-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-amber-600 disabled:cursor-not-allowed disabled:bg-gray-400"
+              >
+                {deleteLoading ? <BtnLoadingSpinner /> : '삭제'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isDeleteAllConfirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-2xl">
+            <h5 className="text-lg font-semibold text-gray-900">전체 삭제 확인</h5>
+            <p className="mt-2 text-sm text-gray-600">
+              {selectedCategory ? `선택된 카테고리(${selectedCategory})의 상품을 모두 삭제할까요?` : '전체 상품 데이터를 모두 삭제할까요?'}
+            </p>
+            <p className="mt-1 text-xs text-rose-600">삭제 후 복구할 수 없습니다.</p>
+
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setIsDeleteAllConfirmOpen(false)}
+                className="rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  await handleDeleteAll()
+                  setIsDeleteAllConfirmOpen(false)
+                }}
+                className="rounded-md bg-rose-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-rose-600"
+              >
+                삭제
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   )
 }

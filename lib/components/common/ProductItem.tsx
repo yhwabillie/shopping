@@ -5,7 +5,7 @@ import { FaHeartCirclePlus } from 'react-icons/fa6'
 import { LuHeartOff } from 'react-icons/lu'
 import { TbShoppingBagMinus, TbShoppingBagPlus } from 'react-icons/tb'
 import Image from 'next/image'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
 interface ProductItemProps {
   product: ProductType
@@ -17,6 +17,12 @@ interface ProductItemProps {
 export const ProductItem = React.memo(({ product, index, handleClickAddProduct, handleClickAddWish }: ProductItemProps) => {
   const isPriorityImage = index < 4
   const [isImageLoaded, setIsImageLoaded] = useState(false)
+  const [imageSrc, setImageSrc] = useState(product.imageUrl?.trim() ? product.imageUrl : '/images/no-image.svg')
+
+  useEffect(() => {
+    setImageSrc(product.imageUrl?.trim() ? product.imageUrl : '/images/no-image.svg')
+    setIsImageLoaded(false)
+  }, [product.imageUrl])
 
   return (
     <li className="group relative box-border flex aspect-[2/3] flex-col justify-between overflow-hidden p-5">
@@ -69,7 +75,7 @@ export const ProductItem = React.memo(({ product, index, handleClickAddProduct, 
       {/* 제품 배경 이미지 */}
       <picture className="absolute inset-0 transition-opacity duration-500">
         <Image
-          src={product.imageUrl}
+          src={imageSrc}
           alt={product.name}
           className={`h-full w-full object-cover transition-all duration-500 group-hover:scale-110 ${isImageLoaded ? 'opacity-100' : 'opacity-0'}`}
           priority={isPriorityImage}
@@ -77,6 +83,11 @@ export const ProductItem = React.memo(({ product, index, handleClickAddProduct, 
           quality={75}
           fetchPriority={isPriorityImage ? 'high' : 'auto'}
           onLoad={() => setIsImageLoaded(true)}
+          onError={() => {
+            if (imageSrc !== '/images/no-image.svg') {
+              setImageSrc('/images/no-image.svg')
+            }
+          }}
           fill
           sizes="
           (max-width: 639px) calc((100vw - 2rem) / 2),

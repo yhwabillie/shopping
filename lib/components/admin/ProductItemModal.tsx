@@ -11,9 +11,11 @@ interface ModalProps {
 
 export const ProductItemModal: React.FC<ModalProps> = ({ isOpen, onClose, product, onSave }) => {
   const [editedProduct, setEditedProduct] = useState<Product>(product)
+  const [imageError, setImageError] = useState(false)
 
   useEffect(() => {
     setEditedProduct(product)
+    setImageError(false)
   }, [product])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -31,9 +33,22 @@ export const ProductItemModal: React.FC<ModalProps> = ({ isOpen, onClose, produc
 
   if (!isOpen) return null
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 backdrop-blur-[1px]">
       <div className="w-11/12 rounded bg-white p-6 shadow-lg md:w-1/2 lg:w-1/3">
         <h2 className="mb-4 text-xl font-bold">제품 정보 수정</h2>
+        <div className="mb-4 overflow-hidden rounded border border-gray-200 bg-gray-50">
+          {editedProduct.imageUrl?.trim() && !imageError ? (
+            <img
+              src={editedProduct.imageUrl}
+              alt={editedProduct.name}
+              className="h-48 w-full object-contain"
+              loading="lazy"
+              onError={() => setImageError(true)}
+            />
+          ) : (
+            <img src="/images/no-image.svg" alt="no image" className="h-48 w-full object-contain" />
+          )}
+        </div>
         <div className="mb-4">
           <label className="mb-1 block">Product Name:</label>
           <input type="text" name="name" value={editedProduct.name} onChange={handleChange} className="w-full rounded border px-3 py-2" />
