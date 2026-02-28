@@ -2,9 +2,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import type { Swiper as SwiperType } from 'swiper'
-import { Autoplay, EffectFade, Parallax } from 'swiper/modules'
+import { Autoplay, EffectFade } from 'swiper/modules'
 import 'swiper/css'
-import 'swiper/css/parallax'
 import 'swiper/css/effect-fade'
 import Image from 'next/image'
 import { PagingBtn } from '@/lib/components/common/PagingBtn'
@@ -13,81 +12,43 @@ import { BsPauseFill, BsPlayFill } from 'react-icons/bs'
 const bannerList = [
   {
     id: 1,
-    title: '스포츠 / 레저 <br /> 클리어런스',
-    description: '인기 요가복 최대 70% 할인! <br /> 한정수량 빠르게 겟하세요.',
+    title: '요가 루틴 <br /> 밸런스 케어',
+    description: '호흡에 집중하는 홈 트레이닝 <br /> 요가복·매트·소도구 기획전',
     mobile_image: `${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL}/banners/banner-mobile-1.webp`,
     tablet_image: `${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL}/banners/banner-tablet-1.webp`,
-    desktop_image: `${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL}/banners/banner-1.webp`,
+    desktop_image: `${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL}/banners/intro-banner-01.avif`,
     banner_alt: '요가하는 사람의 모습 배너 이미지',
   },
   {
     id: 2,
-    title: '추석 맞이 <br/> 가족 나들이 특가',
-    description: '가족과 함께하는 황금연휴! <br/> 여행 패키지 반값 세일!',
+    title: '블루비치 <br/> 캠핑 체어 무드',
+    description: '푸른 바다와 모래사장 앞에서 즐기는 <br/> 감성 캠핑·피크닉 컬렉션',
     mobile_image: `${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL}/banners/banner-mobile-2.webp`,
     tablet_image: `${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL}/banners/banner-tablet-2.webp`,
-    desktop_image: `${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL}/banners/banner-2.webp`,
+    desktop_image: `${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL}/banners/intro-banner-2.avif`,
     banner_alt: '관광지 바다 관경 배너 이미지',
   },
   {
     id: 3,
-    title: '연휴 여행 <br/> 준비 끝!',
-    description: '추석 연휴, 놓치면 후회할 <br/> 여행 특가상품 모음전!',
+    title: '아티장 베이커리 <br/> 바게트 셀렉션',
+    description: '겉은 바삭하고 속은 촉촉한 <br/> 프리미엄 브레드 라인업.',
     mobile_image: `${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL}/banners/banner-mobile-3.webp`,
     tablet_image: `${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL}/banners/banner-tablet-3.webp`,
-    desktop_image: `${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL}/banners/banner-3.webp`,
+    desktop_image: `${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL}/banners/intro-banner-3.avif`,
     banner_alt: '방울 토마토가 여러개 열려있는 모습 배너 이미지',
   },
   {
     id: 4,
-    title: '추석 선물 대전',
-    description: '가족, 친구, 소중한 이들을 위한 <br/> 특별한 추석 선물 추천!',
+    title: '파인 다이닝 <br/> 씨푸드 오마카세',
+    description: '정교하게 플레이팅된 조개 스시로 <br/> 완성한 프리미엄 미식 경험',
     mobile_image: `${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL}/banners/banner-mobile-4.webp`,
     tablet_image: `${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL}/banners/banner-tablet-4.webp`,
-    desktop_image: `${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL}/banners/banner-4.webp`,
+    desktop_image: `${process.env.NEXT_PUBLIC_SUPABASE_STORAGE_URL}/banners/intro-banner-04.avif`,
     banner_alt: '애플 스토어 로고 배너 이미지',
   },
 ]
 
-const FALLBACK_COLOR = '#6b7280'
-
-const getDominantColorFromImageElement = (img: HTMLImageElement) => {
-  try {
-    const canvas = document.createElement('canvas')
-    const ctx = canvas.getContext('2d')
-
-    if (!ctx) return FALLBACK_COLOR
-
-    const sampleSize = 24
-    canvas.width = sampleSize
-    canvas.height = sampleSize
-    ctx.drawImage(img, 0, 0, sampleSize, sampleSize)
-
-    const { data } = ctx.getImageData(0, 0, sampleSize, sampleSize)
-    let r = 0
-    let g = 0
-    let b = 0
-    let count = 0
-
-    for (let i = 0; i < data.length; i += 4) {
-      const alpha = data[i + 3]
-      if (alpha < 32) continue
-      r += data[i]
-      g += data[i + 1]
-      b += data[i + 2]
-      count += 1
-    }
-
-    if (!count) return FALLBACK_COLOR
-
-    const rr = Math.round(r / count)
-    const gg = Math.round(g / count)
-    const bb = Math.round(b / count)
-    return `rgb(${rr}, ${gg}, ${bb})`
-  } catch {
-    return FALLBACK_COLOR
-  }
-}
+const BANNER_BG_COLOR = '#6b7280'
 
 const withAlpha = (color: string, alpha: number) => {
   if (!color || color === 'transparent') return 'transparent'
@@ -177,14 +138,10 @@ const getContrastTextColor = (color: string) => {
 
 export const VisualBanner = () => {
   const [activeIndex, setActiveIndex] = useState(0)
-  const [slideBgColorMap, setSlideBgColorMap] = useState<Record<number, string>>({})
-  const [slideReadyMap, setSlideReadyMap] = useState<Record<number, boolean>>({})
-  const [colorExtractedMap, setColorExtractedMap] = useState<Record<number, boolean>>({})
   const [isPlaying, setIsPlaying] = useState(true)
   const [isResizing, setIsResizing] = useState(false)
   const [viewportWidth, setViewportWidth] = useState(1280)
   const resizeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const loadedImageMapRef = useRef<Record<number, HTMLImageElement>>({})
   const swiperRef = useRef<SwiperType | null>(null)
 
   const handleSlideChange = (swiper: SwiperType) => {
@@ -196,7 +153,20 @@ export const VisualBanner = () => {
   }
 
   const handleNext = () => {
-    swiperRef.current?.slideNext()
+    const swiper = swiperRef.current
+    if (!swiper) return
+
+    if (swiper.isEnd) {
+      swiper.slideTo(0, 900, true)
+      if (swiper.autoplay && isPlaying) {
+        setTimeout(() => {
+          swiper.autoplay?.start()
+        }, 920)
+      }
+      return
+    }
+
+    swiper.slideNext()
   }
 
   const handleTogglePlay = () => {
@@ -211,10 +181,6 @@ export const VisualBanner = () => {
 
     swiper.autoplay.start()
     setIsPlaying(true)
-  }
-
-  const handleMoveToIndex = (index: number) => {
-    swiperRef.current?.slideToLoop(index)
   }
 
   useEffect(() => {
@@ -247,49 +213,14 @@ export const VisualBanner = () => {
     }
   }, [])
 
-  const activeBgColor = slideBgColorMap[activeIndex] ?? FALLBACK_COLOR
+  const activeBgColor = BANNER_BG_COLOR
   const activeTextColor = getContrastTextColor(activeBgColor)
-  const getContainerWidth = (vw: number) => {
-    if (vw < 640) return vw
-    if (vw < 768) return 640
-    if (vw < 1024) return 768
-    if (vw < 1280) return 1024
-    if (vw < 1536) return 1280
-    return 1536
-  }
-
-  const sideGap = Math.max((viewportWidth - getContainerWidth(viewportWidth)) / 2, 0)
-  const showSideBlend = sideGap > 2
 
   const getResponsiveImageSrc = (banner: (typeof bannerList)[number]) => {
     if (viewportWidth < 768) return banner.mobile_image
     if (viewportWidth < 1280) return banner.tablet_image
     return banner.desktop_image
   }
-
-  const applyColorForSlide = (index: number) => {
-    const imgEl = loadedImageMapRef.current[index]
-    if (!imgEl || colorExtractedMap[index]) return
-
-    const dominantColor = getDominantColorFromImageElement(imgEl)
-    setSlideBgColorMap((prev) => (prev[index] === dominantColor ? prev : { ...prev, [index]: dominantColor }))
-    setColorExtractedMap((prev) => (prev[index] ? prev : { ...prev, [index]: true }))
-    setSlideReadyMap((prev) => (prev[index] ? prev : { ...prev, [index]: true }))
-  }
-
-  const handleImageReady = (index: number, imgEl: HTMLImageElement) => {
-    loadedImageMapRef.current[index] = imgEl
-
-    // 초기 로드시에는 1번(인덱스 0)만 즉시 색상 추출
-    if (index === 0) {
-      applyColorForSlide(index)
-    }
-  }
-
-  useEffect(() => {
-    // 슬라이드 전환 시, 해당 슬라이드 이미지가 로드되어 있으면 그때 색상 추출 시작
-    applyColorForSlide(activeIndex)
-  }, [activeIndex, colorExtractedMap])
 
   useEffect(() => {
     const swiper = swiperRef.current
@@ -318,15 +249,15 @@ export const VisualBanner = () => {
         onSwiper={(swiper) => {
           swiperRef.current = swiper
         }}
-        className={isResizing ? 'h-full [&_.swiper-wrapper]:!transition-none [&_[data-swiper-parallax]]:!transition-none' : 'h-full'}
-        modules={[Parallax, Autoplay, EffectFade]}
+        className={isResizing ? 'h-full [&_.swiper-wrapper]:!transition-none' : 'h-full'}
+        modules={[Autoplay, EffectFade]}
         effect="fade"
         fadeEffect={{ crossFade: true }}
-        parallax
+        parallax={false}
         autoplay={{ delay: 5000, disableOnInteraction: false }}
         spaceBetween={0}
         slidesPerView={1}
-        loop
+        loop={false}
         speed={900}
         allowTouchMove={!isResizing}
         updateOnWindowResize={false}
@@ -334,71 +265,56 @@ export const VisualBanner = () => {
       >
         {bannerList.map((banner, index) => (
           <SwiperSlide key={banner.id}>
-            <div
-              className="container relative mx-auto flex h-full items-center overflow-hidden px-4 sm:px-6 md:px-10 lg:px-16 xl:px-24"
-              style={{ backgroundColor: activeBgColor }}
-            >
-              <div className="absolute inset-0 transition-colors duration-500" style={{ backgroundColor: activeBgColor }} />
-              <div className="z-1 relative max-w-[82%] sm:max-w-[72%] md:max-w-[64%] lg:max-w-[58%]">
-                <h3
-                  className="relative text-2xl font-semibold leading-[1.35] sm:text-3xl md:text-4xl lg:text-5xl"
-                  data-swiper-parallax="-600"
-                  style={{
-                    color: activeTextColor,
-                    textShadow: activeTextColor === '#ffffff' ? '0 1px 10px rgba(0,0,0,0.45)' : '0 1px 10px rgba(255,255,255,0.35)',
-                  }}
-                  dangerouslySetInnerHTML={{ __html: banner.title }}
-                />
-                <p
-                  className="mt-2 text-sm leading-relaxed sm:text-base md:text-lg"
-                  data-swiper-parallax="-420"
-                  style={{
-                    color: withAlpha(activeTextColor, 0.92),
-                    textShadow: activeTextColor === '#ffffff' ? '0 1px 8px rgba(0,0,0,0.35)' : '0 1px 8px rgba(255,255,255,0.28)',
-                  }}
-                  dangerouslySetInnerHTML={{ __html: banner.description }}
-                />
-                <button
-                  type="button"
-                  data-swiper-parallax="-260"
-                  className="mt-4 inline-flex cursor-pointer items-center rounded-full bg-white/90 px-4 py-1.5 text-xs font-semibold text-gray-900 shadow-md transition hover:bg-white sm:mt-5 sm:px-5 sm:py-2 sm:text-sm"
-                >
-                  자세히 보기
-                </button>
-              </div>
-              <Image
-                src={getResponsiveImageSrc(banner)}
-                alt={banner.banner_alt}
-                width={1920}
-                height={1080}
-                className={`absolute left-0 top-0 h-full w-full object-cover transition-opacity duration-150 ${slideReadyMap[index] ? 'opacity-100' : 'opacity-0'}`}
-                data-swiper-parallax="-180"
-                priority={index === 0}
-                loading={index === 0 ? 'eager' : 'lazy'}
-                fetchPriority={index === 0 ? 'high' : 'auto'}
-                onLoad={(event) => {
-                  handleImageReady(index, event.currentTarget as HTMLImageElement)
-                }}
-              />
-              <div
-                aria-hidden
-                className={`pointer-events-none absolute left-0 top-0 h-full w-8 transition-colors duration-500 ${showSideBlend ? 'block' : 'hidden'}`}
-                style={{
-                  backgroundColor: activeBgColor,
-                  WebkitMaskImage: 'linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 40%, rgba(0,0,0,0) 100%)',
-                  maskImage: 'linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 40%, rgba(0,0,0,0) 100%)',
-                }}
-              ></div>
-              <div
-                aria-hidden
-                className={`pointer-events-none absolute right-0 top-0 h-full w-8 transition-colors duration-500 ${showSideBlend ? 'block' : 'hidden'}`}
-                style={{
-                  backgroundColor: activeBgColor,
-                  WebkitMaskImage: 'linear-gradient(to left, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 40%, rgba(0,0,0,0) 100%)',
-                  maskImage: 'linear-gradient(to left, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 40%, rgba(0,0,0,0) 100%)',
-                }}
-              ></div>
-            </div>
+            {(() => {
+              const isActiveSlide = activeIndex === index
+
+              return (
+                <>
+                  <div
+                    className="container relative mx-auto flex h-full items-center overflow-hidden px-4 sm:px-6 md:px-10 lg:px-16 xl:px-24"
+                    style={{ backgroundColor: activeBgColor }}
+                  >
+                    <div className="absolute inset-0 transition-colors duration-500" style={{ backgroundColor: activeBgColor }} />
+                    <div
+                      className={`z-1 relative max-w-[90%] transition-all duration-700 sm:max-w-[74%] md:max-w-[64%] lg:max-w-[58%] ${isActiveSlide ? 'translate-y-0 opacity-100' : 'translate-y-3 opacity-80'}`}
+                    >
+                      <h3
+                        className={`text-shadow-2xs relative text-[clamp(1.25rem,3.8vw,3.25rem)] font-semibold leading-[1.35] transition-all duration-700 ${isActiveSlide ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'}`}
+                        style={{
+                          color: activeTextColor,
+                        }}
+                        dangerouslySetInnerHTML={{ __html: banner.title }}
+                      />
+                      <p
+                        className={`text-shadow-2xs mt-[clamp(0.35rem,0.85vw,0.75rem)] text-[clamp(0.78rem,1.55vw,1.15rem)] leading-[1.6] transition-all delay-100 duration-700 ${isActiveSlide ? 'translate-y-0 opacity-100' : 'translate-y-7 opacity-0'}`}
+                        style={{
+                          color: withAlpha(activeTextColor, 0.92),
+                        }}
+                        dangerouslySetInnerHTML={{ __html: banner.description }}
+                      />
+                      <button
+                        type="button"
+                        className={`mt-[clamp(0.8rem,1.9vw,1.45rem)] inline-flex min-h-[2.4rem] cursor-pointer items-center rounded-full bg-white/90 px-[clamp(1.1rem,2.2vw,1.65rem)] py-[clamp(0.45rem,0.95vw,0.72rem)] text-[clamp(0.82rem,1.18vw,1.05rem)] font-semibold text-gray-900 shadow-md transition-all delay-150 duration-700 hover:bg-white ${isActiveSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}
+                      >
+                        자세히 보기
+                      </button>
+                    </div>
+                  </div>
+                  <Image
+                    src={getResponsiveImageSrc(banner)}
+                    alt={banner.banner_alt}
+                    width={1920}
+                    height={1080}
+                    className="absolute left-0 top-0 h-full w-full object-cover"
+                    quality={100}
+                    sizes="100vw"
+                    priority={index === 0}
+                    loading={index === 0 ? 'eager' : 'lazy'}
+                    fetchPriority={index === 0 ? 'high' : 'auto'}
+                  />
+                </>
+              )
+            })()}
           </SwiperSlide>
         ))}
 
