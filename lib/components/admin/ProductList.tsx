@@ -125,18 +125,25 @@ export const ProductList = () => {
       if (!checkAllRef.current) return
       checkAllRef.current.checked = false
 
-      console.log('최종 잔여 데이터', removeMatchingProducts(data, selectedItems))
-      setData(removeMatchingProducts(data, selectedItems))
+      const remainingData = removeMatchingProducts(data, selectedItems)
+      console.log('최종 잔여 데이터', remainingData)
+      setData(remainingData)
+
+      // 삭제 후에도 페이지를 채울 수 있도록 재조회
+      const nextPage = remainingData.length === 0 && currentPage > 1 ? currentPage - 1 : currentPage
+
+      if (nextPage !== currentPage) {
+        setCurrentPage(nextPage)
+      } else {
+        setLoading(true)
+        await fetchData(nextPage, selectedCategory)
+      }
     } catch (error) {
       console.error('Failed to delete selected products:', error)
       toast.error('선택한 제품을 삭제하는 데 실패했습니다. 다시 시도해주세요.')
     } finally {
       setDeleteLoading(false) // 로딩 상태 해제
     }
-
-    //삭제후 DB를 다시 fetch, 로딩 시작
-    fetchData(currentPage, selectedCategory)
-    setLoading(true)
   }
 
   /**

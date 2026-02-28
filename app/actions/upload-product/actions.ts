@@ -41,6 +41,7 @@ export const fetchProducts = async (
         skip,
         take: limit,
         where,
+        orderBy: [{ createdAt: 'desc' }, { idx: 'desc' }],
       }),
       prisma.product.count({
         where,
