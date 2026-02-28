@@ -16,44 +16,29 @@ export const ProductUploadForm = () => {
     mode: 'onChange',
   })
 
-  const handleClickSaveData = () => {
-    if (file) {
-      const reader = new FileReader()
+  const handleClickSaveData = async () => {
+    if (!file) return
 
-      reader.onload = async (e) => {
-        const data = e.target?.result
+    try {
+      setUpdateLoading(true)
 
-        if (data) {
-          const workbook = XLSX.read(data, { type: 'binary' })
+      const arrayBuffer = await file.arrayBuffer()
+      const workbook = XLSX.read(arrayBuffer, { type: 'array', dense: true })
 
-          //SheetName
-          const sheetName = workbook.SheetNames[0]
+      const sheetName = workbook.SheetNames[0]
+      const workSheet = workbook.Sheets[sheetName]
+      const json = XLSX.utils.sheet_to_json<Product>(workSheet)
 
-          //Worksheet
-          const workSheet = workbook.Sheets[sheetName]
+      await createBulkProduct(json)
+      setProductState(true)
 
-          //Json
-          const json: Product[] = XLSX.utils.sheet_to_json(workSheet)
-
-          try {
-            setUpdateLoading(true) // 로딩
-
-            await createBulkProduct(JSON.parse(JSON.stringify(json)))
-            console.log('출발지==>', JSON.parse(JSON.stringify(json)))
-            setProductState(true)
-
-            setFileName('')
-            resetField('upload')
-          } catch (error) {
-            console.log(error)
-            setUpdateLoading(false) // 로딩 상태 해제
-          } finally {
-            setUpdateLoading(false) // 로딩 상태 해제
-          }
-        }
-      }
-
-      reader.readAsArrayBuffer(file)
+      setFileName('')
+      setFile(null)
+      resetField('upload')
+    } catch (error) {
+      console.error('Failed to upload products:', error)
+    } finally {
+      setUpdateLoading(false)
     }
   }
 
@@ -79,10 +64,12 @@ export const ProductUploadForm = () => {
         <input
           {...register('upload')}
           id="upload"
-          onChange={(event: any) => {
-            if (event.target.files.length === 1) {
-              setFileName(event.target.files[0].name)
-              setFile(event.target.files[0])
+          onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+            const files = event.target.files
+
+            if (files && files.length === 1) {
+              setFileName(files[0].name)
+              setFile(files[0])
             } else {
               setFileName('')
               setFile(null)
