@@ -139,6 +139,7 @@ const getContrastTextColor = (color: string) => {
 export const VisualBanner = () => {
   const [activeIndex, setActiveIndex] = useState(0)
   const [isPlaying, setIsPlaying] = useState(true)
+  const [isHovering, setIsHovering] = useState(false)
   const [isResizing, setIsResizing] = useState(false)
   const [viewportWidth, setViewportWidth] = useState(1280)
   const resizeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -226,7 +227,7 @@ export const VisualBanner = () => {
     const swiper = swiperRef.current
     if (!swiper?.autoplay) return
 
-    if (isResizing) {
+    if (isResizing || isHovering) {
       swiper.autoplay.stop()
       return
     }
@@ -238,7 +239,7 @@ export const VisualBanner = () => {
 
     // 사용자가 정지한 상태에서는 리사이즈 후에도 강제로 정지 유지
     swiper.autoplay.stop()
-  }, [isResizing, isPlaying])
+  }, [isResizing, isPlaying, isHovering])
 
   return (
     <div
@@ -249,12 +250,18 @@ export const VisualBanner = () => {
         onSwiper={(swiper) => {
           swiperRef.current = swiper
         }}
+        onMouseEnter={() => {
+          setIsHovering(true)
+        }}
+        onMouseLeave={() => {
+          setIsHovering(false)
+        }}
         className={isResizing ? 'h-full [&_.swiper-wrapper]:!transition-none' : 'h-full'}
         modules={[Autoplay, EffectFade]}
         effect="fade"
         fadeEffect={{ crossFade: true }}
         parallax={false}
-        autoplay={{ delay: 5000, disableOnInteraction: false }}
+        autoplay={{ delay: 5000, disableOnInteraction: false, pauseOnMouseEnter: true }}
         spaceBetween={0}
         slidesPerView={1}
         loop={false}
@@ -294,9 +301,12 @@ export const VisualBanner = () => {
                       />
                       <button
                         type="button"
-                        className={`mt-[clamp(0.8rem,1.9vw,1.45rem)] inline-flex min-h-[2.4rem] cursor-pointer items-center rounded-full bg-white/90 px-[clamp(1.1rem,2.2vw,1.65rem)] py-[clamp(0.45rem,0.95vw,0.72rem)] text-[clamp(0.82rem,1.18vw,1.05rem)] font-semibold text-gray-900 shadow-md transition-all delay-150 duration-700 hover:bg-white ${isActiveSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}
+                        className={`mt-[clamp(0.8rem,1.9vw,1.45rem)] inline-flex min-h-[2.4rem] cursor-pointer items-center gap-2 rounded-full bg-white/90 px-[clamp(1.1rem,2.2vw,1.65rem)] py-[clamp(0.45rem,0.95vw,0.72rem)] text-[clamp(0.82rem,1.18vw,1.05rem)] font-semibold text-gray-900 shadow-md transition-all delay-150 duration-700 hover:bg-white ${isActiveSlide ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}
                       >
-                        자세히 보기
+                        <span>자세히 보기</span>
+                        <svg aria-hidden viewBox="0 0 20 20" fill="none" className="h-[0.95em] w-[0.95em]" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M7 4l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
                       </button>
                     </div>
                   </div>
