@@ -10,9 +10,8 @@ export const ProductUploadForm = () => {
   const [updateLoading, setUpdateLoading] = useState(false)
   const [fileName, setFileName] = useState('')
   const [file, setFile] = useState<File | null>(null)
-  const { productState } = useProductStore()
-  const { setProductState } = useProductStore((state) => state)
-  const { register, setValue, getValues, resetField } = useForm<FieldValues>({
+  const setProductState = useProductStore((state) => state.setProductState)
+  const { register, resetField } = useForm<FieldValues>({
     mode: 'onChange',
   })
 
@@ -81,21 +80,17 @@ export const ProductUploadForm = () => {
       </fieldset>
       <div className="mb-20 flex justify-center gap-2">
         <div className="w-[200px]">
-          <Button
-            label="데이터 업로드"
-            clickEvent={handleClickSaveData}
-            spinner={updateLoading}
-            disalbe={file === null || getValues('upload') === undefined || getValues('upload') === null || updateLoading}
-          />
+          <Button label="데이터 업로드" clickEvent={handleClickSaveData} spinner={updateLoading} disalbe={file === null || updateLoading} />
         </div>
         <div className="w-[200px]">
           <Button
             label="선택 데이터 리셋"
             clickEvent={() => {
               setFileName('')
-              setValue('upload', null)
+              setFile(null)
+              resetField('upload')
             }}
-            disalbe={file === null || getValues('upload') === undefined || getValues('upload') === null}
+            disalbe={file === null}
           />
         </div>
       </div>

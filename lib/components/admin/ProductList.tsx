@@ -16,7 +16,6 @@ interface CheckedItem {
 }
 
 export const ProductList = () => {
-  const checkAllRef = useRef<HTMLInputElement>(null)
   const [loading, setLoading] = useState(true)
   const [deleteLoading, setDeleteLoading] = useState(false)
 
@@ -31,8 +30,8 @@ export const ProductList = () => {
   const [checkedItems, setCheckedItems] = useState<CheckedItem>({})
   const [isAllChecked, setIsAllChecked] = useState(false)
 
-  const { productState } = useProductStore()
-  const { setProductState } = useProductStore((state) => state)
+  const productState = useProductStore((state) => state.productState)
+  const setProductState = useProductStore((state) => state.setProductState)
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
@@ -40,18 +39,12 @@ export const ProductList = () => {
   // 현재 페이지가 바뀔 때 체크박스 상태를 리셋
   useEffect(() => {
     setCheckedItems({})
-    if (checkAllRef.current) {
-      checkAllRef.current.checked = false
-    }
     setIsAllChecked(false)
   }, [currentPage])
 
   // 카테고리가 바뀔 때 체크박스 상태를 리셋
   useEffect(() => {
     setCheckedItems({})
-    if (checkAllRef.current) {
-      checkAllRef.current.checked = false
-    }
     setIsAllChecked(false)
   }, [selectedCategory])
 
@@ -62,21 +55,12 @@ export const ProductList = () => {
    * - checkedItems : DB에 최종 저장되는 결과 state
    */
   const updateCheckAllStatus = () => {
-    const checkedItemsArray = Object.values(checkedItems)
-    const checkedCount = checkedItemsArray.filter((item) => item === true).length
     const totalItems = data?.length ?? 0
+    const checkedCountInCurrentPage = data.reduce((count, item) => {
+      return count + (checkedItems[item.idx] ? 1 : 0)
+    }, 0)
 
-    if (checkedCount === totalItems && totalItems > 0) {
-      setIsAllChecked(true)
-      if (checkAllRef.current) {
-        checkAllRef.current.checked = true
-      }
-    } else {
-      setIsAllChecked(false)
-      if (checkAllRef.current) {
-        checkAllRef.current.checked = false
-      }
-    }
+    setIsAllChecked(checkedCountInCurrentPage === totalItems && totalItems > 0)
   }
 
   /**
@@ -115,15 +99,8 @@ export const ProductList = () => {
       // 상태 초기화 및 업데이트
       setCheckedItems({})
 
-      data?.forEach((item: Product) => {
-        updateCheckedItem(item.idx, false)
-      })
-
       console.log('잔여 데이터', data)
       setIsAllChecked(false)
-
-      if (!checkAllRef.current) return
-      checkAllRef.current.checked = false
 
       const remainingData = removeMatchingProducts(data, selectedItems)
       console.log('최종 잔여 데이터', remainingData)
@@ -190,16 +167,20 @@ export const ProductList = () => {
    * @param {boolean} isChecked - 체크 여부
    */
   const updateAllValues = (isChecked: boolean) => {
-    setCheckedItems((prevItems) => {
-      const updatedItems = Object.keys(prevItems).reduce(
-        (acc, key) => {
-          acc[key] = isChecked
-          return acc
-        },
-        {} as { [key: string]: boolean },
-      )
-      return updatedItems
-    })
+    if (!isChecked) {
+      setCheckedItems({})
+      return
+    }
+
+    const updatedItems = data.reduce(
+      (acc, item) => {
+        acc[item.idx] = true
+        return acc
+      },
+      {} as { [key: string]: boolean },
+    )
+
+    setCheckedItems(updatedItems)
   }
 
   /**
@@ -432,7 +413,7 @@ export const ProductList = () => {
   useEffect(() => {
     // fetch data와 checkedItems의 개수가 같으면 모두 체크
     updateCheckAllStatus()
-  }, [checkedItems])
+  }, [checkedItems, data])
 
   return (
     <section aria-labelledby="product-list-heading" className="mx-4 lg:mx-0">
@@ -478,28 +459,18 @@ export const ProductList = () => {
                     className="mx-auto flex h-4 w-4 cursor-pointer items-center justify-center border border-gray-500/50 bg-white"
                   >
                     <input
-                      ref={checkAllRef}
                       id="check_all"
                       type="checkbox"
+                      checked={isAllChecked}
                       onChange={(event: ChangeEvent<HTMLInputElement>) => {
                         const isChecked = event.target.checked
-                        const checkedItemsCount = Object.keys(checkedItems).length
 
                         if (isChecked) {
-                          if (checkedItemsCount === 0) {
-                            setIsAllChecked(true)
-
-                            data.forEach((item: Product) => {
-                              toggleCheckedItem(item.idx, true)
-                            })
-                          } else if (checkedItemsCount > 0) {
-                            data.forEach((item: Product) => {
-                              updateCheckedItem(item.idx, true)
-                            })
-                          }
+                          updateAllValues(true)
+                          setIsAllChecked(true)
                         } else {
-                          setIsAllChecked(false)
                           updateAllValues(false)
+                          setIsAllChecked(false)
                         }
                       }}
                     />
@@ -519,13 +490,11 @@ export const ProductList = () => {
                   <td className="w-[5%]">
                     <label htmlFor={item.idx} className="mx-auto flex h-4 w-4 cursor-pointer items-center justify-center border border-gray-500/50">
                       <input
+                        checked={!!checkedItems[`${item.idx}`]}
                         onChange={(event: ChangeEvent<HTMLInputElement>) => {
                           const isChecked = event.target.checked
 
                           toggleCheckedItem(`${item.idx}`, isChecked)
-
-                          if (!checkAllRef.current) return
-                          checkAllRef.current.checked = isChecked
                         }}
                         type="checkbox"
                         id={item.idx}
