@@ -77,11 +77,13 @@ interface RootLayoutType {
 export default async function RootLayout({ children }: Readonly<RootLayoutType>) {
   return (
     <html lang="ko">
-      <AuthProvider>
-        <AppTopLazy />
-        {children}
-        <ModalProviderLazy />
-      </AuthProvider>
+      <body>
+        <AuthProvider>
+          <AppTopLazy />
+          <main id="main-content">{children}</main>
+          <ModalProviderLazy />
+        </AuthProvider>
+      </body>
     </html>
   )
 }
