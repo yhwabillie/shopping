@@ -19,7 +19,6 @@ const SearchProductItem = ({
   handleImageLoad,
   handleClickAddWish,
   handleClickAddProduct,
-  loadedImages,
 }: {
   product: ProductType
   index: number
