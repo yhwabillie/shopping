@@ -25,7 +25,7 @@ export const SearchBar = ({ isScrolled }: SearchBarProps) => {
   const autoCompleteLoading = useProductsStore((state) => state.autoCompleteLoading)
   const setAutoCompleteSuggestions = useProductsStore((state) => state.setAutoCompleteSuggestions)
 
-  const searchBarRef = useRef<HTMLFieldSetElement>(null)
+  const searchBarRef = useRef<HTMLFormElement>(null)
   const listboxId = useId()
   const normalizedCurrentQuery = (searchParams.get('query') || '').trim()
   const visibleSuggestions = useMemo(() => autoCompleteSuggestions.slice(0, 8), [autoCompleteSuggestions])
@@ -153,7 +153,7 @@ export const SearchBar = ({ isScrolled }: SearchBarProps) => {
 
   return (
     <form
-      ref={searchBarRef as React.RefObject<HTMLFormElement>}
+      ref={searchBarRef}
       className="relative z-20 flex-[1_1_auto] sm:flex-none"
       onSubmit={(e) => {
         e.preventDefault()
