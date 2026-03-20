@@ -11,7 +11,7 @@
 
 ## <a href="https://shopping-lac-beta.vercel.app/" target="_blank">🌐 Shopping 프로젝트 배포 링크</a>
 
-## 👥 TEST 계정 : guest01 / aa112233#@
+## 👥 TEST 계정 : guest001 / aa112233#@
 
 <br/><br/>
 
@@ -35,7 +35,7 @@
 
 # 👩‍💻 작업 내용
 
-## 1.  SEO 지표 리포트 점수 개선 (Mobile: 🔺약 182%, Desktop: 🔺약 47%)
+## 1.  SEO 지표 리포트 점수 개선 (Mobile: 🔺약 187%, Desktop: 🔺약 45%)
 
 - 이미지가 가장 많이 몰려있는 메인 페이지를 기준으로 점수를 측정
 - 최초 `Desktop 66점`, `Mobile 33점` 에서 시작하여 개선
@@ -48,13 +48,13 @@
 
 <br/><br/>
 
-### 📈 최종 Performance 점수 (Desktop: 97점 / Mobile: 85점)
+### 📈 최종 Performance 점수 (Desktop: 96점 / Mobile: 95점)
 
-- [PageSpeed Insights 최종 Performance 점수 (<a href="https://pagespeed.web.dev/analysis/https-shopping-lac-beta-vercel-app/6n0x4qtv19?hl=en-US&form_factor=desktop" target="_blank">Desktop: 97점</a> / <a href="https://pagespeed.web.dev/analysis/https-shopping-lac-beta-vercel-app/6n0x4qtv19?hl=en-US&form_factor=mobile" target="_blank">Mobile: 93점)]</a>
+- [PageSpeed Insights 최종 Performance 점수 (Desktop: 96점 / Mobile: 95점)]
 
-|                                                        Desktop: `97점`                                                         |                                                      Mobile: `93점`                                                       |
-| :----------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------: |
-| <img src="https://hhgfywdzkbdfwrhfqlbn.supabase.co/storage/v1/object/public/images/github/seo-result-desktop.png" width="400"> | <img src="https://hhgfywdzkbdfwrhfqlbn.supabase.co/storage/v1/object/public/images/github/seo-result-mo.png" width="400"> |
+|                                                           Desktop: `96점`                                                           |                                                           Mobile: `95점`                                                           |
+| :---------------------------------------------------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------------------------------------------------------------: |
+| <img src="https://hhgfywdzkbdfwrhfqlbn.supabase.co/storage/v1/object/public/images/github/2026-seo-result-desktop.png" width="400"> | <img src="https://hhgfywdzkbdfwrhfqlbn.supabase.co/storage/v1/object/public/images/github/2026-seo-result-mobile.png" width="400"> |
 
 <br/><br/>
 
