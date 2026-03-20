@@ -116,7 +116,7 @@ export const CartItem = ({
               max={10}
               value={quantity}
               onChange={(event: any) => handleSetQuantity(event.target.value)}
-              className="h-8 w-8 text-center text-xs font-semibold"
+              className="h-8 w-8 bg-white text-center text-xs font-semibold"
             />
             <div onClick={handleIncrease} className="flex h-8 w-8 cursor-pointer items-center justify-center bg-gray-200">
               <FaPlus className="text-xs" />

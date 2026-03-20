@@ -12,20 +12,19 @@ interface ProductItemProps {
   index: number
   handleClickAddProduct: (targetItem: ProductType) => void
   handleClickAddWish: (targetItem: ProductType) => void
+  onImageLoad?: () => void
 }
 
-export const ProductItem = React.memo(({ product, index, handleClickAddProduct, handleClickAddWish }: ProductItemProps) => {
-  const isPriorityImage = index < 4
-  const [isImageLoaded, setIsImageLoaded] = useState(false)
+export const ProductItem = React.memo(({ product, index, handleClickAddProduct, handleClickAddWish, onImageLoad }: ProductItemProps) => {
+  const isPriorityImage = index < 10
   const [imageSrc, setImageSrc] = useState(product.imageUrl?.trim() ? product.imageUrl : '/images/no-image.svg')
 
   useEffect(() => {
     setImageSrc(product.imageUrl?.trim() ? product.imageUrl : '/images/no-image.svg')
-    setIsImageLoaded(false)
   }, [product.imageUrl])
 
   return (
-    <li className="group relative box-border flex aspect-[2/3] flex-col justify-between overflow-hidden p-5">
+    <li className="group relative box-border flex aspect-[2/3] flex-col justify-between overflow-hidden rounded-2xl p-5 bg-gray-200">
       {/* 카테고리, 제목 */}
       <div>
         <p className="relative z-[1] mb-2 text-xs font-semibold text-white/80 transition-all duration-300 sm:text-sm">{product.category}</p>
@@ -83,20 +82,23 @@ export const ProductItem = React.memo(({ product, index, handleClickAddProduct, 
       </div>
 
       {/* 제품 배경 이미지 */}
-      <picture className="absolute inset-0 transition-opacity duration-500">
+      <picture className="absolute inset-0">
         <Image
           src={imageSrc}
           alt={product.name}
-          className={`h-full w-full object-cover transition-all duration-500 group-hover:scale-110 ${isImageLoaded ? 'opacity-100' : 'opacity-0'}`}
+          className="h-full w-full object-cover transition-all duration-500 group-hover:scale-110"
           priority={isPriorityImage}
           loading={isPriorityImage ? 'eager' : 'lazy'}
           quality={75}
           fetchPriority={isPriorityImage ? 'high' : 'auto'}
-          onLoad={() => setIsImageLoaded(true)}
+          onLoad={() => {
+            if (onImageLoad) onImageLoad()
+          }}
           onError={() => {
             if (imageSrc !== '/images/no-image.svg') {
               setImageSrc('/images/no-image.svg')
             }
+            if (onImageLoad) onImageLoad()
           }}
           fill
           sizes="

@@ -29,7 +29,7 @@ export const AddNewAddressForm = () => {
   }, [new_address])
 
   return (
-    <div className="fixed left-0 top-0 z-[40] flex h-full w-full items-center justify-center overflow-y-auto bg-black bg-opacity-70 backdrop-blur-sm">
+    <div className="fixed left-0 top-0 z-[40] flex h-full w-full items-center justify-center overflow-y-auto bg-[rgba(0,0,0,0.4)] backdrop-blur-sm">
       <div className="mb-auto mt-auto">
         <form
           onSubmit={handleSubmit(createNewAddressData)}
@@ -199,7 +199,7 @@ export const AddNewAddressForm = () => {
               <select
                 {...register('deliveryNote')}
                 id="deliveryNote"
-                className="leading-1 block w-full rounded-md border border-blue-400 px-[15px] pb-[10px] pt-[27px] font-normal text-gray-700 outline-0 placeholder:font-normal"
+                className="h-[62px] appearance-none bg-transparent leading-normal block w-full rounded-md border border-blue-400 px-[15px] pb-[10px] pt-[27px] font-normal text-gray-700 outline-0 placeholder:font-normal"
               >
                 <option value={'문 앞에 부탁드립니다'}>문 앞에 부탁드립니다.</option>
                 <option value={'부재시 연락 부탁드립니다'}>부재시 연락 부탁드립니다.</option>

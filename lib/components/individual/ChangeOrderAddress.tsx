@@ -23,7 +23,7 @@ export const ChangeOrderAddress = () => {
   }
 
   return (
-    <div className="fixed left-0 top-0 z-[40] flex h-full w-full items-center justify-center overflow-y-auto bg-black bg-opacity-70 backdrop-blur-sm">
+    <div className="fixed left-0 top-0 z-[40] flex h-full w-full items-center justify-center overflow-y-auto bg-black/70 backdrop-blur-sm">
       <div className="mb-auto mt-auto">
         <form
           onSubmit={handleSubmit(handleOnSubmitNewAddress)}

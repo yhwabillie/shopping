@@ -76,8 +76,8 @@ interface RootLayoutType {
 
 export default async function RootLayout({ children }: Readonly<RootLayoutType>) {
   return (
-    <html lang="ko">
-      <body>
+    <html lang="ko" suppressHydrationWarning>
+      <body suppressHydrationWarning>
         <AuthProvider>
           <AppTopLazy />
           <main id="main-content">{children}</main>

@@ -1,8 +1,9 @@
 import { useCartlistStore } from '@/lib/stores/cartlistStore'
 import { useSession } from 'next-auth/react'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 export const useCartlistInfo = (userIdx: string) => {
+  const [isMountLoading, setIsMountLoading] = useState(true)
   const { update } = useSession()
   const {
     setSessionUpdate,
@@ -28,7 +29,7 @@ export const useCartlistInfo = (userIdx: string) => {
   useEffect(() => {
     setUserIdx(userIdx)
     setSessionUpdate(update)
-    fetchCartAndAddressData()
+    fetchCartAndAddressData().finally(() => setIsMountLoading(false))
   }, [activeTabId, userIdx, setSessionUpdate, update, fetchCartAndAddressData])
 
   const checkedItemsInfo = useCartlistStore((state) => state.getSelectedCartItems())
@@ -42,7 +43,7 @@ export const useCartlistInfo = (userIdx: string) => {
     deleteCartItem,
     increaseQuantity,
     decreaseQuantity,
-    loading,
+    loading: loading || isMountLoading,
     isCartlistEmpty,
     isAddressEmpty,
     checkedItems,

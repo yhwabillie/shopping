@@ -4,7 +4,7 @@ import { Swiper, SwiperSlide } from 'swiper/react'
 import type { Swiper as SwiperType } from 'swiper'
 import { Autoplay } from 'swiper/modules'
 import 'swiper/css'
-import Image from 'next/image'
+import { getImageProps } from 'next/image'
 import { BsPauseFill, BsPlayFill } from 'react-icons/bs'
 
 const bannerList = [
@@ -139,15 +139,8 @@ export const VisualBanner = () => {
   const [isPlaying, setIsPlaying] = useState(true)
   const [isHovering, setIsHovering] = useState(false)
   const [isResizing, setIsResizing] = useState(false)
-  const [viewportMode, setViewportMode] = useState<'mobile' | 'tablet' | 'desktop'>('desktop')
   const resizeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const swiperRef = useRef<SwiperType | null>(null)
-
-  const getViewportMode = () => {
-    if (window.matchMedia('(max-width: 767px)').matches) return 'mobile' as const
-    if (window.matchMedia('(max-width: 1279px)').matches) return 'tablet' as const
-    return 'desktop' as const
-  }
 
   const handleSlideChange = (swiper: SwiperType) => {
     setActiveIndex(swiper.realIndex)
@@ -187,7 +180,6 @@ export const VisualBanner = () => {
       }
 
       resizeTimerRef.current = setTimeout(() => {
-        setViewportMode(getViewportMode())
         setIsResizing(false)
 
         const swiper = swiperRef.current
@@ -197,24 +189,12 @@ export const VisualBanner = () => {
       }, 120)
     }
 
-    const handleViewportModeChange = () => {
-      setViewportMode(getViewportMode())
-    }
-
-    const mobileMq = window.matchMedia('(max-width: 767px)')
-    const tabletMq = window.matchMedia('(min-width: 768px) and (max-width: 1279px)')
-
-    setViewportMode(getViewportMode())
     window.addEventListener('resize', handleResize)
     window.visualViewport?.addEventListener('resize', handleResize)
-    mobileMq.addEventListener('change', handleViewportModeChange)
-    tabletMq.addEventListener('change', handleViewportModeChange)
 
     return () => {
       window.removeEventListener('resize', handleResize)
       window.visualViewport?.removeEventListener('resize', handleResize)
-      mobileMq.removeEventListener('change', handleViewportModeChange)
-      tabletMq.removeEventListener('change', handleViewportModeChange)
       if (resizeTimerRef.current) {
         clearTimeout(resizeTimerRef.current)
       }
@@ -223,12 +203,6 @@ export const VisualBanner = () => {
 
   const activeBgColor = BANNER_BG_COLOR
   const activeTextColor = getContrastTextColor(activeBgColor)
-
-  const getResponsiveImageSrc = (banner: (typeof bannerList)[number]) => {
-    if (viewportMode === 'mobile') return banner.mobile_image
-    if (viewportMode === 'tablet') return banner.tablet_image
-    return banner.desktop_image
-  }
 
   useEffect(() => {
     const swiper = swiperRef.current
@@ -280,6 +254,26 @@ export const VisualBanner = () => {
           {(() => {
             const isActiveSlide = activeIndex === index
 
+            const common = {
+              alt: banner.banner_alt,
+              quality: 100,
+              sizes: '100vw',
+              priority: index === 0,
+              className: "absolute left-1/2 top-0 h-full w-[calc(100%-32px)] -translate-x-1/2 rounded-[20px] object-cover sm:rounded-[28px] md:rounded-[36px] xl:rounded-[54px]"
+            }
+
+            const {
+              props: { srcSet: desktop, ...desktopRest },
+            } = getImageProps({ ...common, src: banner.desktop_image, width: 1920, height: 1080 })
+
+            const {
+              props: { srcSet: tablet },
+            } = getImageProps({ ...common, src: banner.tablet_image, width: 1280, height: 720 })
+
+            const {
+              props: { srcSet: mobile },
+            } = getImageProps({ ...common, src: banner.mobile_image, width: 768, height: 768 })
+
             return (
               <div className="aspect-[2/3] md:aspect-[640/427] lg:aspect-[512/175]">
                 <div
@@ -323,18 +317,11 @@ export const VisualBanner = () => {
                     </button>
                   </div>
                 </div>
-                <Image
-                  key={`${banner.id}-${viewportMode}`}
-                  src={getResponsiveImageSrc(banner)}
-                  alt={banner.banner_alt}
-                  width={1920}
-                  height={1080}
-                  className="absolute left-1/2 top-0 h-full w-[calc(100%-32px)] -translate-x-1/2 rounded-[20px] object-cover sm:rounded-[28px] md:rounded-[36px] xl:rounded-[54px]"
-                  quality={100}
-                  sizes="100vw"
-                  priority={index === 0}
-                  loading={index === 0 ? 'eager' : 'lazy'}
-                />
+                <picture>
+                  <source media="(max-width: 767px)" srcSet={mobile} />
+                  <source media="(max-width: 1279px)" srcSet={tablet} />
+                  <img srcSet={desktop} {...desktopRest} />
+                </picture>
               </div>
             )
           })()}

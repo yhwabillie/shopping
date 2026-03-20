@@ -19,7 +19,11 @@ export const SearchBar = ({ isScrolled }: SearchBarProps) => {
   const [isFocus, setIsFocus] = useState(false)
   const [inputValue, setInputValue] = useState('') // 검색어를 상태로 관리
   const [activeIndex, setActiveIndex] = useState(-1)
-  const { setSearchQuery, selectSearchResult, autoCompleteSuggestions, autoCompleteLoading, setAutoCompleteSuggestions } = useProductsStore()
+  const setSearchQuery = useProductsStore((state) => state.setSearchQuery)
+  const selectSearchResult = useProductsStore((state) => state.selectSearchResult)
+  const autoCompleteSuggestions = useProductsStore((state) => state.autoCompleteSuggestions)
+  const autoCompleteLoading = useProductsStore((state) => state.autoCompleteLoading)
+  const setAutoCompleteSuggestions = useProductsStore((state) => state.setAutoCompleteSuggestions)
 
   const searchBarRef = useRef<HTMLFieldSetElement>(null)
   const listboxId = useId()
@@ -69,37 +73,37 @@ export const SearchBar = ({ isScrolled }: SearchBarProps) => {
     }
   }
 
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const nextInputValue = event.target.value
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchQuery(inputValue)
+    }, 50) // 타이핑 속도 방해를 렌더 지연으로부터 격리 (빠른 타이핑 시 글자 씹힘 현상 방지)
+    
+    return () => clearTimeout(timer)
+  }, [inputValue, setSearchQuery])
 
-    setInputValue(nextInputValue)
-    setSearchQuery(nextInputValue)
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(event.target.value)
 
     setIsFocus(true) // 키보드 움직임이 감지되면 패널을 보이게 함
     setActiveIndex(-1)
   }
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (!isFocus || autoCompleteLoading) return
+    if (event.nativeEvent.isComposing) return; // 조합 중 이벤트 간섭 완벽 차단
+
+    if (!isFocus) return
 
     switch (event.key) {
       case 'ArrowDown':
+        if (autoCompleteLoading) return
         setActiveIndex((prevIndex) => Math.min(prevIndex + 1, visibleSuggestions.length - 1))
         event.preventDefault()
         break
 
       case 'ArrowUp':
+        if (autoCompleteLoading) return
         setActiveIndex((prevIndex) => (prevIndex <= 0 ? -1 : prevIndex - 1))
         event.preventDefault()
-        break
-
-      case 'Enter':
-        event.preventDefault()
-        if (activeIndex === -1) {
-          executeSearch()
-        } else {
-          executeSearch(visibleSuggestions[activeIndex]?.name)
-        }
         break
 
       case 'Escape':
@@ -148,7 +152,18 @@ export const SearchBar = ({ isScrolled }: SearchBarProps) => {
   }, [activeIndex, isFocus, visibleSuggestions.length])
 
   return (
-    <fieldset ref={searchBarRef} className="relative z-20 flex-[1_1_auto] sm:flex-none">
+    <form
+      ref={searchBarRef as React.RefObject<HTMLFormElement>}
+      className="relative z-20 flex-[1_1_auto] sm:flex-none"
+      onSubmit={(e) => {
+        e.preventDefault()
+        if (activeIndex === -1) {
+          executeSearch()
+        } else {
+          executeSearch(visibleSuggestions[activeIndex]?.name)
+        }
+      }}
+    >
       <div
         className={clsx(
           'rounded-max border-1 relative mx-auto flex h-10 items-center justify-between border-primary bg-primary py-3 pl-6 pr-3 shadow-md',
@@ -243,6 +258,6 @@ export const SearchBar = ({ isScrolled }: SearchBarProps) => {
           </div>
         )}
       </div>
-    </fieldset>
+    </form>
   )
 }

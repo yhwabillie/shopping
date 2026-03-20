@@ -290,6 +290,8 @@ export const useProductsStore = create<ProductsStore>((set, get) => ({
       category: [],
       selectedCategory: '전체',
       currentPage: 1,
+      totalProducts: 0,
+      currentRequestId: 0,
       hasMore: true,
       listLoading: false,
       autoCompleteLoading: false,

@@ -1,7 +1,8 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useAddressStore } from '@/lib/stores/addressStore'
 
 export const useAddressInfo = (userIdx: string) => {
+  const [isMountLoading, setIsMountLoading] = useState(true)
   const {
     fetchAddresses,
     defaultAddress,
@@ -17,7 +18,7 @@ export const useAddressInfo = (userIdx: string) => {
 
   useEffect(() => {
     setUserIdx(userIdx)
-    fetchAddresses()
+    fetchAddresses().finally(() => setIsMountLoading(false))
   }, [userIdx, setUserIdx, fetchAddresses])
 
   return {
@@ -27,7 +28,7 @@ export const useAddressInfo = (userIdx: string) => {
     updateDefaultAddress,
     showModal,
     deleteAddress,
-    loading,
+    loading: loading || isMountLoading,
     isEmpty,
   }
 }
